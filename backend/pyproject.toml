@@ -5,5 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "fastapi-users[sqlalchemy]>=15.0.5",
+    "fastapi[standard]>=0.136.1",
+    "psycopg2-binary>=2.9.12",
+    "python-dotenv>=1.2.2",
     "ruff>=0.15.13",
+    "sqlmodel>=0.0.38",
+    "uvicorn[standard]>=0.47.0",
 ]
