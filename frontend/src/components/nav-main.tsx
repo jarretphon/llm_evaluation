@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/sidebar"
 import { CirclePlusIcon } from "lucide-react"
 
+import { Link } from "react-router-dom"
+
 interface NavMainItem {
   title: string
   url: string
@@ -21,7 +23,7 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               tooltip="New model"
-              className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+              className="min-w-8 cursor-pointer bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
             >
               <CirclePlusIcon />
               <span>New Model</span>
@@ -31,10 +33,15 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
+              <Link to={item.url}>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  className="cursor-pointer"
+                >
+                  {item.icon}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

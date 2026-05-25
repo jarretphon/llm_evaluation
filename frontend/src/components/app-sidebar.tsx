@@ -32,39 +32,39 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/",
       icon: <LayoutDashboardIcon />,
     },
     {
       title: "Models",
-      url: "#",
+      url: "/models",
       icon: <Bot />,
     },
     {
       title: "Evaluations",
-      url: "#",
+      url: "/evaluations",
       icon: <CirclePlay />,
     },
     {
       title: "Compare",
-      url: "#",
+      url: "/compare",
       icon: <ChartBarIcon />,
     },
     {
       title: "Leaderboard",
-      url: "#",
+      url: "/leaderboard",
       icon: <Trophy />,
     },
   ],
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: <Settings2Icon />,
     },
     {
       title: "Get Help",
-      url: "#",
+      url: "/help",
       icon: <CircleHelpIcon />,
     },
   ],
@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="cursor-pointer data-[slot=sidebar-menu-button]:p-1.5!"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
               render={<a href="#" />}
             >
               <Radar className="size-6!" />

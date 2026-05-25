@@ -1,11 +1,13 @@
 import { SidebarInset, SidebarProvider } from "./components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
-import { SectionCards } from "@/components/section-cards"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
-import { DataTable } from "@/components/data-table"
 
-import data from "./app/dashboard/data.json"
+import { Route, Routes } from "react-router-dom"
+import { Dashboard } from "@/pages/dashboard"
+import { Models } from "@/pages/models"
+import { Evaluations } from "@/pages/evaluations"
+import { Compare } from "@/pages/compare"
+import { Leaderboard } from "@/pages/leaderboard"
 
 export function App() {
   return (
@@ -20,17 +22,13 @@ export function App() {
       <AppSidebar variant="floating" collapsible="icon" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <SectionCards />
-              <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
-              </div>
-              <DataTable data={data} />
-            </div>
-          </div>
-        </div>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/models" element={<Models />} />
+          <Route path="/evaluations" element={<Evaluations />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
       </SidebarInset>
     </SidebarProvider>
   )
