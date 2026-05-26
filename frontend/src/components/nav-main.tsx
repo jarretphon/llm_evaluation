@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sidebar"
 import { CirclePlusIcon } from "lucide-react"
 
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
 import { useState } from "react"
 import { AddModelDialog } from "./add-model-dialog"
@@ -18,8 +18,11 @@ interface NavMainItem {
 }
 
 export function NavMain({ items }: { items: NavMainItem[] }) {
-  const [active, setActive] = useState(items[0].url)
   const [isAddModelDialogOpen, setIsAddModelDialogOpen] = useState(false)
+  const { pathname } = useLocation()
+
+  const isItemActive = (url: string) =>
+    pathname === url || (url !== "/" && pathname.startsWith(`${url}/`))
 
   return (
     <SidebarGroup>
@@ -47,8 +50,7 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
             <SidebarMenuItem key={item.title}>
               <Link to={item.url}>
                 <SidebarMenuButton
-                  isActive={active === item.url}
-                  onClick={() => setActive(item.url)}
+                  isActive={isItemActive(item.url)}
                   tooltip={item.title}
                   className="cursor-pointer"
                 >
