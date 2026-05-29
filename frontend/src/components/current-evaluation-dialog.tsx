@@ -17,33 +17,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useIsMobile } from "@/hooks/use-mobile.ts"
-
-export type BenchmarkStatus = "Running" | "Queued" | "Completed" | "Failed"
-
-export type BenchmarkRecord = {
-  name: string
-  status: BenchmarkStatus
-}
-
-export type EvaluationDetails = {
-  name: string
-  type: "running" | "completed" | "failed" | "queued"
-  progress: number
-  startedAt: string
-  estimatedEnd?: string
-  endedAt?: string
-  duration: string
-  benchmarks: BenchmarkRecord[]
-}
+import type { EvaluationRecord } from "@/data/evaluations"
+import { type BenchmarkRecord } from "@/data/benchmarks"
 
 interface CurrentEvaluationDialogProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  evaluation: EvaluationDetails | null
+  evaluation: EvaluationRecord | null
   onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
 }
 
-const statusMeta = (status: EvaluationDetails["type"]) => {
+const statusMeta = (status: EvaluationRecord["evalStatus"]) => {
   const base = {
     running: { label: "Running", variant: "default" as const },
     completed: { label: "Completed", variant: "secondary" as const },
@@ -67,18 +51,18 @@ export function CurrentEvaluationDialog({
       return null
     }
 
-    const isRunning = evaluation.type === "running"
-    const meta = statusMeta(evaluation.type)
+    const isRunning = evaluation.evalStatus === "running"
+    const meta = statusMeta(evaluation.evalStatus)
     const timelineRows = isRunning
       ? [
-          ["Started", evaluation.startedAt],
-          ["Duration", evaluation.duration],
-          ["Estimated End", evaluation.estimatedEnd ?? "—"],
+          ["Started", evaluation.metadata.start],
+          ["Duration", evaluation.metadata.duration],
+          ["Estimated End", evaluation.metadata.estimatedEnd ?? "—"],
         ]
       : [
-          ["Started", evaluation.startedAt],
-          ["Ended", evaluation.endedAt ?? "—"],
-          ["Duration", evaluation.duration],
+          ["Started", evaluation.metadata.start],
+          ["Ended", evaluation.metadata.end ?? "—"],
+          ["Duration", evaluation.metadata.duration],
         ]
 
     return (
@@ -87,7 +71,7 @@ export function CurrentEvaluationDialog({
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-heading text-xl font-semibold tracking-tight">
-                {evaluation.name}
+                {evaluation.model.name}
               </h2>
               <Badge
                 variant={meta.variant}
@@ -127,9 +111,12 @@ export function CurrentEvaluationDialog({
                   Progress
                 </p>
                 <div className="mt-3 flex items-center gap-3">
-                  <Progress value={evaluation.progress} className="flex-1" />
+                  <Progress
+                    value={evaluation.metadata.progress ?? 0}
+                    className="flex-1"
+                  />
                   <span className="text-sm font-medium text-muted-foreground tabular-nums">
-                    {evaluation.progress}%
+                    {evaluation.metadata.progress ?? 0}%
                   </span>
                 </div>
               </div>
@@ -145,23 +132,23 @@ export function CurrentEvaluationDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {evaluation.benchmarks.map((benchmark) => (
-                    <TableRow key={benchmark.name}>
+                  {evaluation.benchmarkRecords.map((benchmarkRecord) => (
+                    <TableRow key={benchmarkRecord.benchmark.name}>
                       <TableCell className="font-medium">
-                        {benchmark.name}
+                        {benchmarkRecord.benchmark.name}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {benchmark.status}
+                        {benchmarkRecord.status}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => onRetryBenchmark?.(benchmark)}
+                          onClick={() => onRetryBenchmark?.(benchmarkRecord)}
                         >
                           <RotateCw className="size-4" />
                           <span className="sr-only">
-                            Re-run {benchmark.name}
+                            Re-run {benchmarkRecord.benchmark.name}
                           </span>
                         </Button>
                       </TableCell>

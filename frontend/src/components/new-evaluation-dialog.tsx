@@ -37,121 +37,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useIsMobile } from "@/hooks/use-mobile.ts"
+import { models, type Model } from "@/data/models"
+import { benchmarks, type Benchmark } from "@/data/benchmarks"
 
-type AvailableModel = {
-  id: string
-  name: string
-  provider: string
-  context: string
-  description: string
-}
-
-type BenchmarkOption = {
-  id: string
-  name: string
-  description: string
-}
-
-const availableModels: AvailableModel[] = [
-  {
-    id: "nova-reasoning",
-    name: "Nova Reasoning 8B",
-    provider: "Open-weight",
-    context: "32k context",
-    description: "Fast and economical for regression-style evaluation loops.",
-  },
-  {
-    id: "atlas-chat",
-    name: "Atlas Chat 13B",
-    provider: "OpenAI-compatible",
-    context: "64k context",
-    description:
-      "Balanced choice when quality and response fluency matter most.",
-  },
-  {
-    id: "helios-safety",
-    name: "Helios Safety 34B",
-    provider: "Private cluster",
-    context: "128k context",
-    description:
-      "Best for long-form policy sweeps and refusal calibration runs.",
-  },
-]
-
-const benchmarkOptions: BenchmarkOption[] = [
-  {
-    id: "gsm8k",
-    name: "GSM8K",
-    description: "Arithmetic and grade-school math.",
-  },
-  {
-    id: "mmlu",
-    name: "MMLU",
-    description: "Broad multitask knowledge and reasoning.",
-  },
-  {
-    id: "bbh",
-    name: "BBH",
-    description: "Hard reasoning and multi-step tasks.",
-  },
-  {
-    id: "humaneval",
-    name: "HumanEval",
-    description: "Python code generation and correctness.",
-  },
-  { id: "mt-bench", name: "MT-Bench", description: "Multi-turn chat quality." },
-  {
-    id: "arena-hard",
-    name: "Arena-Hard",
-    description: "Challenging preference and response quality.",
-  },
-  {
-    id: "truthfulqa",
-    name: "TruthfulQA",
-    description: "Truthfulness and hallucination resistance.",
-  },
-  {
-    id: "longbench",
-    name: "LongBench",
-    description: "Long-context comprehension.",
-  },
-  {
-    id: "toolbench",
-    name: "ToolBench",
-    description: "Tool use and orchestration.",
-  },
-  { id: "bfcl", name: "BFCL", description: "Function calling reliability." },
-  {
-    id: "api-bank",
-    name: "API-Bank",
-    description: "API selection and call planning.",
-  },
-  {
-    id: "gorilla",
-    name: "Gorilla",
-    description: "Tool-augmented instruction following.",
-  },
-  {
-    id: "advbench",
-    name: "AdvBench",
-    description: "Adversarial safety prompts.",
-  },
-  {
-    id: "safetybench",
-    name: "SafetyBench",
-    description: "Policy compliance and refusal quality.",
-  },
-  {
-    id: "wildguard",
-    name: "WildGuard",
-    description: "Unsafe content detection and mitigation.",
-  },
-  {
-    id: "refusalqa",
-    name: "RefusalQA",
-    description: "Appropriate refusal behavior.",
-  },
-]
+const availableModels: Model[] = models
+const benchmarkOptions: Benchmark[] = benchmarks
 
 const HeaderText = "Start New Evaluation"
 const DescriptionText =
@@ -199,11 +89,11 @@ function EvaluationFormBody({
             <SelectContent>
               <SelectGroup>
                 {availableModels.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
+                  <SelectItem key={model.id} value={model.name}>
                     <span className="flex flex-col items-start gap-0.5">
                       <span>{model.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {model.provider} · {model.context}
+                        {model.description}
                       </span>
                     </span>
                   </SelectItem>
