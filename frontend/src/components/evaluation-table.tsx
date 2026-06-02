@@ -7,13 +7,12 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { NewEvaluationDialog } from "@/components/new-evaluation-dialog"
+import { NewEvalModal } from "@/components/NewEvalModal/NewEvalModal"
 import { CurrentEvalModal } from "@/components/CurrentEvalModal/CurrentEvalModal"
 
 import {
   evaluations,
   type EvaluationRecord,
-  type EvaluationStatus,
   type FilterOption,
 } from "@/data/evaluations"
 
@@ -27,12 +26,49 @@ const filters: Array<{ value: FilterOption; label: string }> = [
   { value: "queued", label: "Queued" },
 ]
 
-const initialCounts = {
+const initialCounts: Record<FilterOption, number> = {
   all: 0,
   running: 0,
   completed: 0,
   failed: 0,
   queued: 0,
+}
+
+const SearchField = ({ placeholder }: { placeholder: string }) => {
+  return (
+    <div className="relative w-full min-w-0 flex-1 lg:w-full lg:max-w-xs">
+      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      <Input
+        placeholder={placeholder}
+        className="h-10 w-full rounded-xl border-white/15 bg-[#202020] pl-9 text-sm text-white"
+      />
+    </div>
+  )
+}
+
+const FilterTabs = ({
+  selectedFilter,
+  counts,
+  onChange,
+}: {
+  selectedFilter: FilterOption
+  counts: Record<FilterOption, number>
+  onChange: (value: FilterOption) => void
+}) => {
+  return (
+    <Tabs value={selectedFilter} onValueChange={onChange} className="gap-4">
+      <TabsList className="w-full justify-start overflow-x-auto rounded-2xl bg-muted/60 p-1">
+        {filters.map((f) => (
+          <TabsTrigger key={f.value} value={f.value} className="px-2 xl:px-4">
+            <span>{f.label}</span>
+            <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+              {counts[f.value]}
+            </span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  )
 }
 
 const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
@@ -62,12 +98,45 @@ const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
   )
 }
 
+const EvaluationRow = ({
+  record,
+  onSelect,
+}: {
+  record: EvaluationRecord
+  onSelect: (record: EvaluationRecord) => void
+}) => {
+  return (
+    <div
+      className="flex cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 transition hover:bg-[#252525] sm:flex-row sm:items-center sm:justify-between"
+      onClick={() => onSelect(record)}
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-bold text-white">
+          {record.model.symbol}
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold text-white">
+            {record.model.name}
+          </h3>
+          <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
+            {record.model.description}
+          </p>
+        </div>
+      </div>
+
+      <EvaluationProgress record={record} />
+    </div>
+  )
+}
+
 export function EvaluationTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =
     useState<EvaluationRecord | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("all")
+  const searchPlaceholder = "Search models..."
   const filteredEvaluations = useMemo(
     () =>
       selectedFilter === "all"
@@ -80,7 +149,7 @@ export function EvaluationTable() {
 
   const counts = useMemo(
     () =>
-      evaluations.reduce<Record<string, number>>(
+      evaluations.reduce<Record<FilterOption, number>>(
         (acc, e) => {
           acc.all += 1
           acc[e.evalStatus] += 1
@@ -94,114 +163,40 @@ export function EvaluationTable() {
   return (
     <div className="mx-auto h-full w-full max-w-360 px-4 text-white">
       <Card className="h-full w-full rounded-2xl border border-white/10 bg-[#171717] p-4 shadow-2xl">
-        <div className="flex flex-col gap-3 lg:hidden">
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-              <Input
-                placeholder="Search ..."
-                className="h-10 w-full rounded-xl border-white/15 bg-[#202020] pl-9 text-sm text-white"
-              />
-            </div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex lg:justify-between">
+          <SearchField placeholder={searchPlaceholder} />
 
-            <Button
-              className="shrink-0 cursor-pointer rounded-md whitespace-nowrap"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <CirclePlay className="size-4" />
-              <span className="ml-1 hidden sm:inline">New Evaluation</span>
-            </Button>
-          </div>
-
-          <Tabs
-            value={selectedFilter}
-            onValueChange={(value: FilterOption) => setSelectedFilter(value)}
-            className="gap-4"
+          <Button
+            className="order-2 w-fit shrink-0 cursor-pointer rounded-md whitespace-nowrap lg:order-3 lg:h-8 lg:w-auto lg:gap-1 lg:px-3"
+            onClick={() => setIsDialogOpen(true)}
           >
-            <TabsList className="w-full justify-start overflow-x-auto rounded-2xl bg-muted/60 p-1">
-              {filters.map((f) => (
-                <TabsTrigger key={f.value} value={f.value} className="px-4">
-                  <span>{f.label}</span>
-                  <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
-                    {counts[f.value]}
-                  </span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
+            <CirclePlay className="size-4" />
+            <span className="ml-1 hidden sm:inline">New Evaluation</span>
+          </Button>
 
-        <div className="hidden items-center gap-3 lg:flex lg:justify-between">
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-            <Input
-              placeholder="Search models..."
-              className="h-10 w-full rounded-xl border-white/15 bg-[#202020] pl-9 text-sm text-white"
+          <div className="order-3 col-span-2 w-full lg:order-2 lg:ml-auto lg:w-auto">
+            <FilterTabs
+              selectedFilter={selectedFilter}
+              counts={counts}
+              onChange={(value) => setSelectedFilter(value)}
             />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Tabs
-              value={selectedFilter}
-              onValueChange={(value: EvaluationStatus) =>
-                setSelectedFilter(value)
-              }
-              className="gap-4"
-            >
-              <TabsList className="w-full justify-start overflow-x-auto rounded-2xl bg-muted/60 p-1">
-                {filters.map((f) => (
-                  <TabsTrigger key={f.value} value={f.value} className="px-4">
-                    <span>{f.label}</span>
-                    <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
-                      {counts[f.value]}
-                    </span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            <Button
-              className="shrink-0 cursor-pointer rounded-md whitespace-nowrap"
-              size="sm"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <CirclePlay className="size-4" />
-              <span className="ml-1">New Evaluation</span>
-            </Button>
           </div>
         </div>
 
         <div className="mt-4 space-y-4">
           {filteredEvaluations.map((e) => (
-            <div
+            <EvaluationRow
               key={e.model.name}
-              className="flex cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 transition hover:bg-[#252525] sm:flex-row sm:items-center sm:justify-between"
-              onClick={() => {
-                setActiveEvaluation(e)
+              record={e}
+              onSelect={(record) => {
+                setActiveEvaluation(record)
                 setIsDetailsOpen(true)
               }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-bold text-white">
-                  {e.model.symbol}
-                </div>
-
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold text-white">
-                    {e.model.name}
-                  </h3>
-                  <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
-                    {e.model.description}
-                  </p>
-                </div>
-              </div>
-
-              <EvaluationProgress record={e} />
-            </div>
+            />
           ))}
         </div>
       </Card>
-      <NewEvaluationDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
+      <NewEvalModal isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
       <CurrentEvalModal
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}

@@ -9,18 +9,19 @@ import type { BenchmarkRecord } from "@/data/benchmarks"
 import { EvalProgress } from "@/components/CurrentEvalModal/EvalProgress"
 import { BenchmarkTable } from "./BenchmarkTable"
 import { EvalDurationStats } from "./EvalDurationStats"
+interface ModalProps {
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
+  evaluation: EvaluationRecord | null
+  onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
+}
 
 export function CurrentEvalModal({
   isOpen,
   setIsOpen,
   evaluation,
   onRetryBenchmark,
-}: {
-  isOpen: boolean
-  setIsOpen: (open: boolean) => void
-  evaluation: EvaluationRecord | null
-  onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
-}) {
+}: ModalProps) {
   const isMobile = useIsMobile()
 
   const content = useMemo(() => {
