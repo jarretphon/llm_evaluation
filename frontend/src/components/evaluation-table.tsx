@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { NewEvaluationDialog } from "@/components/new-evaluation-dialog"
-import { CurrentEvaluationDialog } from "@/components/current-evaluation-dialog"
+import { CurrentEvalModal } from "@/components/CurrentEvalModal/CurrentEvalModal"
 
 import {
   evaluations,
@@ -202,7 +202,7 @@ export function EvaluationTable() {
         </div>
       </Card>
       <NewEvaluationDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
-      <CurrentEvaluationDialog
+      <CurrentEvalModal
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}
         evaluation={activeEvaluation}

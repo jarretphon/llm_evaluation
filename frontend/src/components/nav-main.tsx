@@ -10,7 +10,7 @@ import { CirclePlusIcon } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
 import { useState } from "react"
-import { AddModelDialog } from "./add-model-dialog"
+import { AddModelModal } from "@/components/AddModelModal/AddModelModal"
 interface NavMainItem {
   title: string
   url: string
@@ -40,7 +40,7 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <AddModelDialog
+        <AddModelModal
           isOpen={isAddModelDialogOpen}
           setIsOpen={setIsAddModelDialogOpen}
         />
