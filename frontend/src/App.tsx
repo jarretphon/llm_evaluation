@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header"
 
 import { Route, Routes } from "react-router-dom"
 import { Dashboard } from "@/pages/dashboard"
-import { Models } from "@/pages/models"
+import { ModelDetail, Models } from "@/pages/models"
 import { Evaluations } from "@/pages/evaluations"
 import { Compare } from "@/pages/compare"
 import { Leaderboard } from "@/pages/leaderboard"
@@ -25,6 +25,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/models" element={<Models />} />
+          <Route path="/models/:modelId" element={<ModelDetail />} />
           <Route path="/evaluations" element={<Evaluations />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
