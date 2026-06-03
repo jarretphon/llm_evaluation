@@ -1,40 +1,40 @@
 import { useMemo, useState } from "react"
-import { CalendarDays } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardDescription,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import type { EvaluationStatus } from "@/data/evaluations"
-import type { ModelEvaluationRun } from "@/data/model-evaluation-runs"
+
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import type { EvaluationRecord } from "@/data/evaluations"
 import type { Model } from "@/data/models"
+import { EvaluationCard } from "@/components/EvaluationCard"
 
 type ModelEvaluationPanelProps = {
   model: Model | null
-  runs: ModelEvaluationRun[]
-  onSelectRun?: (run: ModelEvaluationRun) => void
+  evaluations: EvaluationRecord[]
+  onSelectEvaluation: (evaluation: EvaluationRecord) => void
 }
 
-type RangePreset = "today" | "last-7-days" | "past-month" | "custom"
+type TimeRange = "today" | "7d" | "30d" | "custom"
 
-const statusMeta: Record<
-  EvaluationStatus,
-  {
-    label: string
-    variant: "default" | "secondary" | "destructive" | "outline"
-  }
-> = {
-  running: { label: "Running", variant: "default" },
-  completed: { label: "Completed", variant: "secondary" },
-  failed: { label: "Failed", variant: "destructive" },
-  queued: { label: "Queued", variant: "outline" },
-}
-
-const rangeOptions: Array<{ value: RangePreset; label: string }> = [
+const rangeOptions: Array<{ value: TimeRange; label: string }> = [
   { value: "today", label: "Today" },
-  { value: "last-7-days", label: "Last 7 days" },
-  { value: "past-month", label: "Past month" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Past month" },
   { value: "custom", label: "Custom" },
 ]
 
@@ -58,24 +58,24 @@ const addDays = (date: Date, days: number) => {
 
 const toInputDate = (date: Date) => date.toISOString().slice(0, 10)
 
-const parseRunDate = (value: string) => new Date(value.replace(" ", "T"))
+const parseEvaluationDate = (value: string) => new Date(value.replace(" ", "T"))
 
 const getRange = (
-  preset: RangePreset,
+  timeRange: TimeRange,
   customStart: string,
   customEnd: string
 ) => {
   const today = new Date()
 
-  if (preset === "today") {
+  if (timeRange === "today") {
     return { start: startOfDay(today), end: endOfDay(today) }
   }
 
-  if (preset === "last-7-days") {
+  if (timeRange === "7d") {
     return { start: startOfDay(addDays(today, -6)), end: endOfDay(today) }
   }
 
-  if (preset === "past-month") {
+  if (timeRange === "30d") {
     return { start: startOfDay(addDays(today, -30)), end: endOfDay(today) }
   }
 
@@ -87,12 +87,11 @@ const getRange = (
 
 export function ModelEvaluationPanel({
   model,
-  runs,
-  onSelectRun,
+  evaluations,
+  onSelectEvaluation,
 }: ModelEvaluationPanelProps) {
   const today = useMemo(() => new Date(), [])
-  const [rangePreset, setRangePreset] =
-    useState<RangePreset>("last-7-days")
+  const [timeRange, setTimeRange] = useState<TimeRange>("7d")
   const [customStart, setCustomStart] = useState(() =>
     toInputDate(addDays(today, -6))
   )
@@ -111,101 +110,49 @@ export function ModelEvaluationPanel({
     )
   }
 
-  const sortedRuns = [...runs].sort((a, b) =>
-    b.startedAt.localeCompare(a.startedAt)
+  const sortedEvaluations = [...evaluations].sort((a, b) =>
+    b.metadata.start.localeCompare(a.metadata.start)
   )
-  const range = getRange(rangePreset, customStart, customEnd)
-  const filteredRuns = sortedRuns.filter((run) => {
-    const runDate = parseRunDate(run.startedAt)
+  const range = getRange(timeRange, customStart, customEnd)
+  const filteredEvaluations = sortedEvaluations.filter((evaluation) => {
+    const evaluationDate = parseEvaluationDate(evaluation.metadata.start)
 
-    if (Number.isNaN(runDate.getTime())) {
+    if (Number.isNaN(evaluationDate.getTime())) {
       return true
     }
 
-    return runDate >= range.start && runDate <= range.end
+    return evaluationDate >= range.start && evaluationDate <= range.end
   })
-  const runningCount = runs.filter((run) => run.status === "running").length
 
   return (
-    <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
-      <CardHeader className="gap-4 border-b border-border/50">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="text-lg text-white">
-                Evaluation instances
-              </CardTitle>
-              <Badge variant="outline" className="rounded-full px-2">
-                {filteredRuns.length} shown
-              </Badge>
-              {runningCount > 0 ? (
-                <Badge className="rounded-full px-2">
-                  {runningCount} active
-                </Badge>
-              ) : null}
-            </div>
-            <p className="text-sm text-white/60">
-              Review recent evaluation instances for {model.name}.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-white/50">
-            <CalendarDays className="size-4" />
-            {range.start.toLocaleDateString()} - {range.end.toLocaleDateString()}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                variant={rangePreset === option.value ? "secondary" : "outline"}
-                size="sm"
-                className="rounded-md"
-                onClick={() => setRangePreset(option.value)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-
-          {rangePreset === "custom" ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium text-white/50">Start</span>
-                <Input
-                  type="date"
-                  value={customStart}
-                  max={customEnd}
-                  onChange={(event) => setCustomStart(event.target.value)}
-                  className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium text-white/50">End</span>
-                <Input
-                  type="date"
-                  value={customEnd}
-                  min={customStart}
-                  onChange={(event) => setCustomEnd(event.target.value)}
-                  className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
-                />
-              </label>
-            </div>
-          ) : null}
-        </div>
+    <Card className="@container/card h-full gap-0">
+      <CardHeader>
+        <CardTitle>Evaluations</CardTitle>
+        <CardDescription>
+          <span className="hidden @[540px]/card:block">
+            Evaluation instances for the selected model.
+          </span>
+          <span className="@[540px]/card:hidden">Last 3 months</span>
+        </CardDescription>
+        <CardAction>
+          <DateFilter
+            value={timeRange}
+            setValue={setTimeRange}
+            customStart={customStart}
+            customEnd={customEnd}
+            onCustomStartChange={setCustomStart}
+            onCustomEndChange={setCustomEnd}
+          />
+        </CardAction>
       </CardHeader>
-      <CardContent>
-        {filteredRuns.length ? (
-          <div className="space-y-3">
-            {filteredRuns.map((run, index) => (
-              <EvaluationRunRow
-                key={run.id}
-                run={run}
-                index={index}
-                onSelectRun={onSelectRun}
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        {filteredEvaluations.length ? (
+          <div className="flex flex-col gap-3">
+            {filteredEvaluations.map((evaluation) => (
+              <EvaluationCard
+                key={evaluation.id}
+                record={evaluation}
+                onSelect={onSelectEvaluation}
               />
             ))}
           </div>
@@ -219,52 +166,93 @@ export function ModelEvaluationPanel({
   )
 }
 
-const EvaluationRunRow = ({
-  run,
-  index,
-  onSelectRun,
+const DateFilter = ({
+  value,
+  setValue,
+  customStart,
+  customEnd,
+  onCustomStartChange,
+  onCustomEndChange,
 }: {
-  run: ModelEvaluationRun
-  index: number
-  onSelectRun?: (run: ModelEvaluationRun) => void
+  value: TimeRange
+  setValue: (timeRange: TimeRange) => void
+  customStart: string
+  customEnd: string
+  onCustomStartChange: (value: string) => void
+  onCustomEndChange: (value: string) => void
 }) => {
-  const meta = statusMeta[run.status]
-
   return (
-    <button
-      type="button"
-      className="w-full rounded-lg border border-border/60 bg-[#1a1a1a] p-4 text-left transition hover:border-white/20 hover:bg-[#202020] focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
-      onClick={() => onSelectRun?.(run)}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold tracking-[0.18em] text-white/40 uppercase">
-            Run {index + 1}
-          </p>
-          <p className="mt-1 text-sm font-medium text-white">
-            {run.benchmarkCount} benchmarks
-          </p>
+    <div className="flex w-full flex-col gap-3 md:w-auto md:items-end">
+      <ToggleGroup
+        multiple={false}
+        value={value ? [value] : []}
+        onValueChange={(nextValue) => {
+          setValue((nextValue[0] as TimeRange | undefined) ?? "7d")
+        }}
+        variant="outline"
+        className="hidden *:data-[slot=toggle-group-item]:px-4! @[700px]/card:flex"
+      >
+        {rangeOptions.map((option) => {
+          return (
+            <ToggleGroupItem key={option.value} value={option.value}>
+              {option.label}
+            </ToggleGroupItem>
+          )
+        })}
+      </ToggleGroup>
+
+      <Select
+        value={value}
+        onValueChange={(nextValue) => {
+          if (nextValue !== null) {
+            setValue(nextValue as TimeRange)
+          }
+        }}
+      >
+        <SelectTrigger
+          className="flex w-44 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[700px]/card:hidden"
+          size="sm"
+          aria-label="Select date range"
+        >
+          <SelectValue placeholder="Last 7 days" />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl">
+          {rangeOptions.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              className="rounded-lg"
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {value === "custom" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-white/50">Start</span>
+            <Input
+              type="date"
+              value={customStart}
+              max={customEnd}
+              onChange={(event) => onCustomStartChange(event.target.value)}
+              className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-white/50">End</span>
+            <Input
+              type="date"
+              value={customEnd}
+              min={customStart}
+              onChange={(event) => onCustomEndChange(event.target.value)}
+              className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
+            />
+          </label>
         </div>
-        <Badge variant={meta.variant} className="rounded-full px-2">
-          {meta.label}
-        </Badge>
-      </div>
-      <div className="mt-3 grid gap-2 text-xs text-white/60 sm:grid-cols-2">
-        <div>
-          <span className="text-white/40">Started:</span> {run.startedAt}
-        </div>
-        <div>
-          <span className="text-white/40">Duration:</span> {run.duration}
-        </div>
-      </div>
-      {run.status === "running" ? (
-        <div className="mt-3 flex items-center gap-3">
-          <Progress value={run.progress ?? 0} className="flex-1" />
-          <span className="text-xs font-medium text-white/70 tabular-nums">
-            {run.progress ?? 0}%
-          </span>
-        </div>
-      ) : null}
-    </button>
+      )}
+    </div>
   )
 }

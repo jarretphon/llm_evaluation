@@ -1,4 +1,4 @@
-import { type EvaluationRecord } from "@/data/evaluations"
+import type { EvaluationRecord } from "@/data/evaluations"
 import { Progress } from "@/components/ui/progress"
 
 export function EvalProgress({ evaluation }: { evaluation: EvaluationRecord }) {

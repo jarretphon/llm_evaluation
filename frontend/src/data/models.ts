@@ -1,5 +1,5 @@
 import { benchmarks } from "@/data/benchmarks"
-import { type EvaluationRecord } from "@/data/evaluations"
+import type { EvaluationRecord } from "@/data/evaluations"
 
 export interface Model {
   id: string

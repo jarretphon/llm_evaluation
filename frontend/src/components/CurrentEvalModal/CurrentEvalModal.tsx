@@ -1,7 +1,8 @@
 import { useIsMobile } from "@/hooks/use-mobile.ts"
 import { CurrentEvalDialog } from "@/components/CurrentEvalModal/CurrentEvalDialog"
 import { CurrentEvalDrawer } from "@/components/CurrentEvalModal/CurrentEvalDrawer"
-import { type EvaluationRecord } from "@/data/evaluations"
+import type { EvaluationRecord } from "@/data/evaluations"
+import type { Model } from "@/data/models"
 
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +13,7 @@ import { EvalDurationStats } from "./EvalDurationStats"
 interface ModalProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
-  evaluation: EvaluationRecord | null
+  evaluation: (EvaluationRecord & { model: Model }) | null
   onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
 }
 

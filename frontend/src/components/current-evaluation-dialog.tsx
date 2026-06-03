@@ -18,16 +18,21 @@ import {
 } from "@/components/ui/table"
 import { useIsMobile } from "@/hooks/use-mobile.ts"
 import type { EvaluationRecord } from "@/data/evaluations"
-import { type BenchmarkRecord } from "@/data/benchmarks"
+import type { Model } from "@/data/models"
+import type { BenchmarkRecord } from "@/data/benchmarks"
+
+type EvaluationRecordWithModel = EvaluationRecord & {
+  model: Model
+}
 
 interface CurrentEvaluationDialogProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  evaluation: EvaluationRecord | null
+  evaluation: EvaluationRecordWithModel | null
   onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
 }
 
-const statusMeta = (status: EvaluationRecord["evalStatus"]) => {
+const statusMeta = (status: EvaluationRecordWithModel["evalStatus"]) => {
   const base = {
     running: { label: "Running", variant: "default" as const },
     completed: { label: "Completed", variant: "secondary" as const },

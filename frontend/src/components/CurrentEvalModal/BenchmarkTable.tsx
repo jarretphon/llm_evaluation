@@ -1,4 +1,4 @@
-import { type BenchmarkRecord } from "@/data/benchmarks"
+import type { BenchmarkRecord } from "@/data/benchmarks"
 import type { EvaluationRecord } from "@/data/evaluations"
 import {
   Table,
