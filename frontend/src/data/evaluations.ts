@@ -12,7 +12,7 @@ interface EvalMetadata {
 }
 
 export interface EvaluationRecord {
-  model: Model
+  id: string
   metadata: EvalMetadata
   evalStatus: EvaluationStatus
   benchmarkRecords: BenchmarkRecord[]
@@ -27,6 +27,7 @@ export const evaluations: EvaluationRecord[] = models.map(
     const selectedBenchmarks = setBenchmarks(index)
 
     return {
+      id: `eval-${index}`,
       model,
       metadata,
       evalStatus,

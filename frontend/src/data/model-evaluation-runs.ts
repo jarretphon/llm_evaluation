@@ -1,4 +1,3 @@
-import { models } from "./models"
 import type { EvaluationStatus } from "./evaluations"
 
 export interface ModelEvaluationRun {
@@ -9,45 +8,178 @@ export interface ModelEvaluationRun {
   duration: string
   progress?: number
   benchmarkCount: number
+  benchmarkIds: string[]
 }
 
-const statusCycle: EvaluationStatus[] = [
-  "running",
-  "completed",
-  "queued",
-  "failed",
+export const modelEvaluationRuns: ModelEvaluationRun[] = [
+  {
+    id: "eval-20260603-claude-opus-4-7-regression",
+    modelId: "claude-opus-4-7",
+    status: "running",
+    startedAt: "2026-06-03 09:30",
+    duration: "42 min",
+    progress: 68,
+    benchmarkCount: 5,
+    benchmarkIds: ["gsm8k", "mmlu", "bbh", "toolbench", "safetybench"],
+  },
+  {
+    id: "eval-20260601-claude-opus-4-7-reasoning",
+    modelId: "claude-opus-4-7",
+    status: "completed",
+    startedAt: "2026-06-01 14:10",
+    duration: "1h 18m",
+    benchmarkCount: 4,
+    benchmarkIds: ["gsm8k", "mmlu", "bbh", "longbench"],
+  },
+  {
+    id: "eval-20260523-claude-opus-4-7-safety",
+    modelId: "claude-opus-4-7",
+    status: "failed",
+    startedAt: "2026-05-23 16:45",
+    duration: "24 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["advbench", "safetybench", "wildguard", "refusalqa"],
+  },
+  {
+    id: "eval-20260603-gpt-5-5-release-gate",
+    modelId: "gpt-5-5",
+    status: "completed",
+    startedAt: "2026-06-03 08:15",
+    duration: "56 min",
+    benchmarkCount: 6,
+    benchmarkIds: [
+      "gsm8k",
+      "mmlu",
+      "humaneval",
+      "bfcl",
+      "arena-hard",
+      "truthfulqa",
+    ],
+  },
+  {
+    id: "eval-20260602-gpt-5-5-tooling",
+    modelId: "gpt-5-5",
+    status: "running",
+    startedAt: "2026-06-02 21:40",
+    duration: "1h 06m",
+    progress: 44,
+    benchmarkCount: 4,
+    benchmarkIds: ["toolbench", "bfcl", "api-bank", "gorilla"],
+  },
+  {
+    id: "eval-20260527-gpt-5-5-safety",
+    modelId: "gpt-5-5",
+    status: "completed",
+    startedAt: "2026-05-27 11:20",
+    duration: "37 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["advbench", "safetybench", "wildguard", "refusalqa"],
+  },
+  {
+    id: "eval-20260602-claude-opus-4-6-baseline",
+    modelId: "claude-opus-4-6",
+    status: "completed",
+    startedAt: "2026-06-02 10:05",
+    duration: "1h 04m",
+    benchmarkCount: 5,
+    benchmarkIds: ["gsm8k", "mmlu", "bbh", "longbench", "truthfulqa"],
+  },
+  {
+    id: "eval-20260530-claude-opus-4-6-regression",
+    modelId: "claude-opus-4-6",
+    status: "queued",
+    startedAt: "2026-05-30 17:00",
+    duration: "Queued",
+    benchmarkCount: 4,
+    benchmarkIds: ["humaneval", "mt-bench", "toolbench", "bfcl"],
+  },
+  {
+    id: "eval-20260603-gemini-flash-3-5-latency",
+    modelId: "gemini-flash-3-5",
+    status: "running",
+    startedAt: "2026-06-03 10:20",
+    duration: "19 min",
+    progress: 82,
+    benchmarkCount: 4,
+    benchmarkIds: ["mt-bench", "arena-hard", "api-bank", "bfcl"],
+  },
+  {
+    id: "eval-20260601-gemini-flash-3-5-volume",
+    modelId: "gemini-flash-3-5",
+    status: "completed",
+    startedAt: "2026-06-01 09:10",
+    duration: "33 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["gsm8k", "humaneval", "toolbench", "wildguard"],
+  },
+  {
+    id: "eval-20260518-gemini-flash-3-5-safety",
+    modelId: "gemini-flash-3-5",
+    status: "completed",
+    startedAt: "2026-05-18 13:35",
+    duration: "28 min",
+    benchmarkCount: 3,
+    benchmarkIds: ["advbench", "safetybench", "refusalqa"],
+  },
+  {
+    id: "eval-20260602-deep-seek-2-3-code",
+    modelId: "deep-seek-2-3",
+    status: "failed",
+    startedAt: "2026-06-02 15:25",
+    duration: "21 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["humaneval", "mt-bench", "api-bank", "gorilla"],
+  },
+  {
+    id: "eval-20260529-deep-seek-2-3-reasoning",
+    modelId: "deep-seek-2-3",
+    status: "completed",
+    startedAt: "2026-05-29 08:45",
+    duration: "49 min",
+    benchmarkCount: 5,
+    benchmarkIds: ["gsm8k", "mmlu", "bbh", "longbench", "truthfulqa"],
+  },
+  {
+    id: "eval-20260603-llama-4-maverick-open",
+    modelId: "llama-4-maverick",
+    status: "queued",
+    startedAt: "2026-06-03 12:00",
+    duration: "Queued",
+    benchmarkCount: 6,
+    benchmarkIds: [
+      "gsm8k",
+      "mmlu",
+      "humaneval",
+      "bfcl",
+      "safetybench",
+      "refusalqa",
+    ],
+  },
+  {
+    id: "eval-20260531-llama-4-maverick-safety",
+    modelId: "llama-4-maverick",
+    status: "completed",
+    startedAt: "2026-05-31 19:30",
+    duration: "44 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["advbench", "safetybench", "wildguard", "refusalqa"],
+  },
+  {
+    id: "eval-20260601-mistral-large-3-multilingual",
+    modelId: "mistral-large-3",
+    status: "completed",
+    startedAt: "2026-06-01 18:05",
+    duration: "52 min",
+    benchmarkCount: 5,
+    benchmarkIds: ["mmlu", "bbh", "longbench", "mt-bench", "truthfulqa"],
+  },
+  {
+    id: "eval-20260524-mistral-large-3-tooling",
+    modelId: "mistral-large-3",
+    status: "completed",
+    startedAt: "2026-05-24 10:55",
+    duration: "39 min",
+    benchmarkCount: 4,
+    benchmarkIds: ["toolbench", "bfcl", "api-bank", "gorilla"],
+  },
 ]
-
-const formatDateTime = (date: Date) =>
-  date.toISOString().slice(0, 16).replace("T", " ")
-
-const baseDate = new Date("2026-06-02T09:00:00Z")
-
-export const modelEvaluationRuns: ModelEvaluationRun[] = models.flatMap(
-  (model, modelIndex) => {
-    const runCount = 2 + (modelIndex % 3)
-
-    return Array.from({ length: runCount }, (_, runIndex) => {
-      const status = statusCycle[(modelIndex + runIndex) % statusCycle.length]
-      const startOffsetHours = (modelIndex * 3 + runIndex * 2 + 1) * 8
-      const startedAt = new Date(
-        baseDate.getTime() - startOffsetHours * 60 * 60 * 1000
-      )
-      const durationMinutes = 18 + modelIndex * 6 + runIndex * 4
-      const progress =
-        status === "running"
-          ? ((modelIndex * 17 + runIndex * 11) % 90) + 5
-          : undefined
-
-      return {
-        id: `${model.id}-run-${runIndex + 1}`,
-        modelId: model.id,
-        status,
-        startedAt: formatDateTime(startedAt),
-        duration: `${durationMinutes} min`,
-        progress,
-        benchmarkCount: 3 + ((modelIndex + runIndex) % 4),
-      }
-    })
-  }
-)

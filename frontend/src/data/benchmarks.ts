@@ -10,6 +10,7 @@ export interface BenchmarkRecord {
   benchmark: Benchmark
   status: EvaluationStatus
   progress?: number
+  score?: number
 }
 
 export const benchmarks: Benchmark[] = [
@@ -33,7 +34,11 @@ export const benchmarks: Benchmark[] = [
     name: "HumanEval",
     description: "Python code generation and correctness.",
   },
-  { id: "mt-bench", name: "MT-Bench", description: "Multi-turn chat quality." },
+  {
+    id: "mt-bench",
+    name: "MT-Bench",
+    description: "Multi-turn chat quality.",
+  },
   {
     id: "arena-hard",
     name: "Arena-Hard",
@@ -54,7 +59,11 @@ export const benchmarks: Benchmark[] = [
     name: "ToolBench",
     description: "Tool use and orchestration.",
   },
-  { id: "bfcl", name: "BFCL", description: "Function calling reliability." },
+  {
+    id: "bfcl",
+    name: "BFCL",
+    description: "Function calling reliability.",
+  },
   {
     id: "api-bank",
     name: "API-Bank",
