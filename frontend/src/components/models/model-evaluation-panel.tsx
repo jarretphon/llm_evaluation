@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
+import { addDays, endOfDay, parse, startOfDay } from "date-fns"
+import { type DateRange } from "react-day-picker"
 
 import {
   Card,
@@ -8,20 +10,12 @@ import {
   CardAction,
   CardDescription,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 import type { EvaluationRecord } from "@/data/evaluations"
 import type { Model } from "@/data/models"
 import { EvaluationCard } from "@/components/EvaluationCard"
+import { type dateFilter, TimeRangeFilter } from "@/components/TimeRangeFilter"
+import { sortEvaluationsBy } from "@/utils/helpers"
 
 type ModelEvaluationPanelProps = {
   model: Model | null
@@ -29,60 +23,35 @@ type ModelEvaluationPanelProps = {
   onSelectEvaluation: (evaluation: EvaluationRecord) => void
 }
 
-type TimeRange = "today" | "7d" | "30d" | "custom"
-
-const rangeOptions: Array<{ value: TimeRange; label: string }> = [
-  { value: "today", label: "Today" },
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Past month" },
-  { value: "custom", label: "Custom" },
-]
-
-const startOfDay = (date: Date) => {
-  const next = new Date(date)
-  next.setHours(0, 0, 0, 0)
-  return next
-}
-
-const endOfDay = (date: Date) => {
-  const next = new Date(date)
-  next.setHours(23, 59, 59, 999)
-  return next
-}
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
-const toInputDate = (date: Date) => date.toISOString().slice(0, 10)
-
-const parseEvaluationDate = (value: string) => new Date(value.replace(" ", "T"))
-
-const getRange = (
-  timeRange: TimeRange,
-  customStart: string,
-  customEnd: string
-) => {
+const getRange = (filter: dateFilter, dateRange: DateRange | undefined) => {
   const today = new Date()
 
-  if (timeRange === "today") {
+  if (filter === "today") {
     return { start: startOfDay(today), end: endOfDay(today) }
   }
 
-  if (timeRange === "7d") {
+  if (filter === "7d") {
     return { start: startOfDay(addDays(today, -6)), end: endOfDay(today) }
   }
 
-  if (timeRange === "30d") {
+  if (filter === "30d") {
     return { start: startOfDay(addDays(today, -30)), end: endOfDay(today) }
   }
 
   return {
-    start: startOfDay(new Date(`${customStart}T00:00:00`)),
-    end: endOfDay(new Date(`${customEnd}T00:00:00`)),
+    start: startOfDay(dateRange?.from ?? new Date()),
+    end: endOfDay(dateRange?.to ?? new Date()),
   }
+}
+
+const parseEvaluationDate = (value: string) => {
+  const parsed = parse(value, "yyyy-MM-dd HH:mm", new Date())
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed
+  }
+
+  return new Date(value)
 }
 
 export function ModelEvaluationPanel({
@@ -90,12 +59,11 @@ export function ModelEvaluationPanel({
   evaluations,
   onSelectEvaluation,
 }: ModelEvaluationPanelProps) {
-  const today = useMemo(() => new Date(), [])
-  const [timeRange, setTimeRange] = useState<TimeRange>("7d")
-  const [customStart, setCustomStart] = useState(() =>
-    toInputDate(addDays(today, -6))
-  )
-  const [customEnd, setCustomEnd] = useState(() => toInputDate(today))
+  const [filter, setFilter] = useState<dateFilter>("7d")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfDay(addDays(new Date(), -6)),
+    to: endOfDay(new Date()),
+  })
 
   if (!model) {
     return (
@@ -110,10 +78,8 @@ export function ModelEvaluationPanel({
     )
   }
 
-  const sortedEvaluations = [...evaluations].sort((a, b) =>
-    b.metadata.start.localeCompare(a.metadata.start)
-  )
-  const range = getRange(timeRange, customStart, customEnd)
+  const sortedEvaluations = sortEvaluationsBy(evaluations, "date", "descending")
+  const range = getRange(filter, dateRange)
   const filteredEvaluations = sortedEvaluations.filter((evaluation) => {
     const evaluationDate = parseEvaluationDate(evaluation.metadata.start)
 
@@ -126,22 +92,19 @@ export function ModelEvaluationPanel({
 
   return (
     <Card className="@container/card h-full gap-0">
-      <CardHeader>
-        <CardTitle>Evaluations</CardTitle>
-        <CardDescription>
-          <span className="hidden @[540px]/card:block">
-            Evaluation instances for the selected model.
-          </span>
-          <span className="@[540px]/card:hidden">Last 3 months</span>
-        </CardDescription>
-        <CardAction>
-          <DateFilter
-            value={timeRange}
-            setValue={setTimeRange}
-            customStart={customStart}
-            customEnd={customEnd}
-            onCustomStartChange={setCustomStart}
-            onCustomEndChange={setCustomEnd}
+      <CardHeader className="flex min-w-0 flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <CardTitle>Evaluations</CardTitle>
+          <CardDescription>
+            <span>Evaluation instances for the selected model.</span>
+          </CardDescription>
+        </div>
+        <CardAction className="no-scrollbar overflow-x-auto max-sm:w-full">
+          <TimeRangeFilter
+            value={filter}
+            setValue={setFilter}
+            customDateRange={dateRange}
+            setCustomDateRange={setDateRange}
           />
         </CardAction>
       </CardHeader>
@@ -163,96 +126,5 @@ export function ModelEvaluationPanel({
         )}
       </CardContent>
     </Card>
-  )
-}
-
-const DateFilter = ({
-  value,
-  setValue,
-  customStart,
-  customEnd,
-  onCustomStartChange,
-  onCustomEndChange,
-}: {
-  value: TimeRange
-  setValue: (timeRange: TimeRange) => void
-  customStart: string
-  customEnd: string
-  onCustomStartChange: (value: string) => void
-  onCustomEndChange: (value: string) => void
-}) => {
-  return (
-    <div className="flex w-full flex-col gap-3 md:w-auto md:items-end">
-      <ToggleGroup
-        multiple={false}
-        value={value ? [value] : []}
-        onValueChange={(nextValue) => {
-          setValue((nextValue[0] as TimeRange | undefined) ?? "7d")
-        }}
-        variant="outline"
-        className="hidden *:data-[slot=toggle-group-item]:px-4! @[700px]/card:flex"
-      >
-        {rangeOptions.map((option) => {
-          return (
-            <ToggleGroupItem key={option.value} value={option.value}>
-              {option.label}
-            </ToggleGroupItem>
-          )
-        })}
-      </ToggleGroup>
-
-      <Select
-        value={value}
-        onValueChange={(nextValue) => {
-          if (nextValue !== null) {
-            setValue(nextValue as TimeRange)
-          }
-        }}
-      >
-        <SelectTrigger
-          className="flex w-44 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[700px]/card:hidden"
-          size="sm"
-          aria-label="Select date range"
-        >
-          <SelectValue placeholder="Last 7 days" />
-        </SelectTrigger>
-        <SelectContent className="rounded-xl">
-          {rangeOptions.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              className="rounded-lg"
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {value === "custom" && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-white/50">Start</span>
-            <Input
-              type="date"
-              value={customStart}
-              max={customEnd}
-              onChange={(event) => onCustomStartChange(event.target.value)}
-              className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
-            />
-          </label>
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-white/50">End</span>
-            <Input
-              type="date"
-              value={customEnd}
-              min={customStart}
-              onChange={(event) => onCustomEndChange(event.target.value)}
-              className="h-10 rounded-md border-white/15 bg-[#202020] text-white"
-            />
-          </label>
-        </div>
-      )}
-    </div>
   )
 }

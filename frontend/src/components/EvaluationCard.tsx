@@ -34,7 +34,7 @@ export function EvaluationCard({
   onSelect,
 }: {
   record: EvaluationRecord
-  onSelect: (record: EvaluationRecord) => void
+  onSelect: (record: EvaluationRecord) => void | undefined
 }) {
   return (
     <div
