@@ -59,22 +59,20 @@ export function ModelDetails() {
 
   return (
     <div className="flex h-full w-full flex-col gap-6 p-4 text-white md:p-6">
-      <div className="flex flex-col items-center gap-4 md:flex-row">
+      <div className="flex items-start gap-2 md:flex-row">
         <Button
           variant="outline"
-          className="w-fit cursor-pointer rounded-md"
+          className="w-fit cursor-pointer rounded-lg"
           onClick={() => navigate("/models")}
         >
           <ArrowLeft className="size-4" />
         </Button>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-semibold text-white">
-            {model.symbol}
-          </div>
-          <div>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="min-w-0">
             <h1 className="text-2xl font-semibold md:text-3xl">{model.name}</h1>
-            <p className="mt-1 text-sm text-white/60">{model.description}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-white/60 md:line-clamp-none">
+              {model.description}
+            </p>
           </div>
         </div>
 
@@ -83,7 +81,7 @@ export function ModelDetails() {
           onClick={() => setIsNewEvalOpen(true)}
         >
           <CirclePlay className="size-4" />
-          New Evaluation
+          <span className="ml-2 hidden lg:inline">New Evaluation</span>
         </Button>
       </div>
 

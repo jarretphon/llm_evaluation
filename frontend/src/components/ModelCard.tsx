@@ -47,15 +47,15 @@ export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
     >
       <Card className="relative h-full gap-4 border border-border/50 bg-[#161616] text-white shadow-xl transition hover:border-white/20 hover:bg-[#1a1a1a]">
         <div className="flex justify-between gap-4 px-6">
-          <div className="flex items-start gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-bold text-white">
               {model.symbol}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-base text-white">
                 {model.name}
               </CardTitle>
-              <CardDescription className="line-clamp-2 text-xs text-white/60">
+              <CardDescription className="line-clamp-2 text-xs leading-4 text-white/60 md:line-clamp-none">
                 {model.description}
               </CardDescription>
             </div>
