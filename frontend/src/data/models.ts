@@ -3,6 +3,7 @@ import type { EvaluationRecord } from "@/data/evaluations"
 
 export interface Model {
   id: string
+  provider: string
   symbol: string
   name: string
   description: string
@@ -13,6 +14,7 @@ export interface Model {
 export const models: Model[] = [
   {
     id: "claude-opus-4-7",
+    provider: "Anthropic",
     symbol: "ANTP",
     name: "Claude Opus 4.7",
     description:
@@ -139,6 +141,7 @@ export const models: Model[] = [
   },
   {
     id: "gpt-5-5",
+    provider: "OpenAI",
     symbol: "OPEN",
     name: "GPT-5.5",
     description:
@@ -252,6 +255,7 @@ export const models: Model[] = [
   },
   {
     id: "claude-opus-4-6",
+    provider: "Anthropic",
     symbol: "ANTP",
     name: "Claude Opus 4.6",
     description:
@@ -359,6 +363,7 @@ export const models: Model[] = [
   },
   {
     id: "gemini-flash-3-5",
+    provider: "Gemini",
     symbol: "GEM",
     name: "Gemini Flash 3.5",
     description:
@@ -468,6 +473,7 @@ export const models: Model[] = [
   },
   {
     id: "deep-seek-2-3",
+    provider: "DeepSeek",
     symbol: "DS",
     name: "Deep Seek 2.3",
     description:
