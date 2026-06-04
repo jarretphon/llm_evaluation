@@ -18,8 +18,7 @@ import { type dateFilter, TimeRangeFilter } from "@/components/TimeRangeFilter"
 import { sortEvaluationsBy } from "@/utils/helpers"
 
 type ModelEvaluationPanelProps = {
-  model: Model | null
-  evaluations: EvaluationRecord[]
+  model: Model
   onSelectEvaluation: (evaluation: EvaluationRecord) => void
 }
 
@@ -56,7 +55,6 @@ const parseEvaluationDate = (value: string) => {
 
 export function ModelEvaluationPanel({
   model,
-  evaluations,
   onSelectEvaluation,
 }: ModelEvaluationPanelProps) {
   const [filter, setFilter] = useState<dateFilter>("7d")
@@ -78,7 +76,11 @@ export function ModelEvaluationPanel({
     )
   }
 
-  const sortedEvaluations = sortEvaluationsBy(evaluations, "date", "descending")
+  const sortedEvaluations = sortEvaluationsBy(
+    model.evaluations,
+    "date",
+    "descending"
+  )
   const range = getRange(filter, dateRange)
   const filteredEvaluations = sortedEvaluations.filter((evaluation) => {
     const evaluationDate = parseEvaluationDate(evaluation.metadata.start)

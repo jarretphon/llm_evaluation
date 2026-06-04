@@ -89,7 +89,6 @@ export function ModelDetails() {
 
       <ModelEvaluationPanel
         model={model}
-        evaluations={model.evaluations}
         onSelectEvaluation={(evaluation) => {
           setActiveEvaluation(attachModel(model, evaluation))
           setIsDetailsOpen(true)
