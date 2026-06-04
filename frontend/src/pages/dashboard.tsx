@@ -1,7 +1,7 @@
 import { SectionCards } from "@/components/section-cards"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
-import { RecentActivityTable } from "@/components/recent-activity-table"
+import { RecentActivityTable } from "@/components/RecentActivity/RecentActivity"
 
 import data from "../app/dashboard/data.json"
 

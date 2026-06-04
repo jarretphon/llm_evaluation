@@ -4,7 +4,7 @@ import { ArrowLeft, CirclePlay } from "lucide-react"
 
 import { CurrentEvalModal } from "@/components/CurrentEvalModal/CurrentEvalModal"
 import { NewEvalModal } from "@/components/NewEvalModal/NewEvalModal"
-import { ModelEvaluationPanel } from "@/components/models/model-evaluation-panel"
+import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"

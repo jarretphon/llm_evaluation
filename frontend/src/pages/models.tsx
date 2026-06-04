@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { ModelCard } from "@/components/models/model-card"
-import type { ModelRunStats } from "@/components/models/model-card"
+import { ModelCard } from "@/components/ModelCard"
+import type { ModelRunStats } from "@/components/ModelCard"
 import { ModelFilter } from "@/components/ModelFilter"
 
 import { models, type Model } from "@/data/models"
