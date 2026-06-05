@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { models, type Model } from "@/data/models"
 import { benchmarks, type Benchmark } from "@/data/benchmarks"
@@ -91,31 +92,33 @@ const BenchmarkMultiSelect = ({ benchmarks }: { benchmarks: Benchmark[] }) => {
   }
 
   return (
-    <div className="recent-activity-scroll grid max-h-95 grid-cols-1 gap-2 overflow-y-auto border-b pr-1 sm:grid-cols-2 sm:pr-2">
-      {benchmarks.map((benchmark) => {
-        const checked = selectedBenchmarkIds.includes(benchmark.id)
-        return (
-          <label
-            key={benchmark.id}
-            htmlFor={benchmark.id}
-            className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3 transition-colors hover:bg-muted/50"
-          >
-            <Checkbox
-              id={benchmark.id}
-              checked={checked}
-              onCheckedChange={() => toggleBenchmark(benchmark.id)}
-            />
-            <span>
-              <span className="block text-sm font-medium text-foreground">
-                {benchmark.name}
+    <ScrollArea className="h-80">
+      <div className="grid grid-cols-1 gap-2 border-b sm:grid-cols-2">
+        {benchmarks.map((benchmark) => {
+          const checked = selectedBenchmarkIds.includes(benchmark.id)
+          return (
+            <label
+              key={benchmark.id}
+              htmlFor={benchmark.id}
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3 transition-colors hover:bg-muted/50"
+            >
+              <Checkbox
+                id={benchmark.id}
+                checked={checked}
+                onCheckedChange={() => toggleBenchmark(benchmark.id)}
+              />
+              <span>
+                <span className="block text-sm font-medium text-foreground">
+                  {benchmark.name}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {benchmark.description}
+                </span>
               </span>
-              <span className="block text-xs text-muted-foreground">
-                {benchmark.description}
-              </span>
-            </span>
-          </label>
-        )
-      })}
-    </div>
+            </label>
+          )
+        })}
+      </div>
+    </ScrollArea>
   )
 }

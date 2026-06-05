@@ -29,7 +29,7 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
 
 const ModelForm = () => {
   return (
-    <FieldGroup>
+    <FieldGroup className="px-2 sm:px-0">
       <Field>
         <Label htmlFor="model-endpoint">
           {ADD_MODEL_MODAL_TEXTS.formLabels.modelEndpoint}

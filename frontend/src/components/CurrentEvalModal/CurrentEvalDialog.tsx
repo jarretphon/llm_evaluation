@@ -11,7 +11,7 @@ export function CurrentEvalDialog({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-3xl">{children}</DialogContent>
+      <DialogContent className="sm:max-w-2xl">{children}</DialogContent>
     </Dialog>
   )
 }

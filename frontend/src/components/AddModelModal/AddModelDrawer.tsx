@@ -6,7 +6,6 @@ import {
   DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-  DrawerClose,
 } from "@/components/ui/drawer"
 import { ADD_MODEL_MODAL_TEXTS } from "@/components/AddModelModal/AddModelModal.texts.ts"
 
@@ -31,12 +30,19 @@ export function AddModelDrawer({
           </DrawerHeader>
           {children}
           <DrawerFooter>
-            <Button>{ADD_MODEL_MODAL_TEXTS.primaryAction}</Button>
-            <DrawerClose>
-              <Button variant="outline">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="flex-1"
+              >
                 {ADD_MODEL_MODAL_TEXTS.secondaryAction}
               </Button>
-            </DrawerClose>
+
+              <Button className="flex-1">
+                {ADD_MODEL_MODAL_TEXTS.primaryAction}
+              </Button>
+            </div>
           </DrawerFooter>
         </DrawerContent>
       </form>

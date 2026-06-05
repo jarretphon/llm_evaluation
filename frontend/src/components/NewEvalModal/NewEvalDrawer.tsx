@@ -7,6 +7,7 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { NEW_EVAL_MODAL_TEXTS } from "@/components/NewEvalModal/NewEvalModal.texts"
 
@@ -23,15 +24,15 @@ export function NewEvalDrawer({
 }) {
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
-      <form>
-        <DrawerContent>
+      <DrawerContent className="h-[80vh] overflow-hidden">
+        <form className="flex min-h-0 flex-1 flex-col">
           <DrawerHeader>
             <DrawerTitle>{NEW_EVAL_MODAL_TEXTS.title}</DrawerTitle>
             <DrawerDescription>
               {NEW_EVAL_MODAL_TEXTS.description}
             </DrawerDescription>
           </DrawerHeader>
-          {children}
+          <ScrollArea className="min-h-0 flex-1 px-4">{children}</ScrollArea>
           <DrawerFooter className="py-3">
             <div className="flex gap-2">
               <Button
@@ -51,8 +52,8 @@ export function NewEvalDrawer({
               </Button>
             </div>
           </DrawerFooter>
-        </DrawerContent>
-      </form>
+        </form>
+      </DrawerContent>
     </Drawer>
   )
 }

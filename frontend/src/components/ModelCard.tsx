@@ -55,7 +55,7 @@ export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
               <CardTitle className="truncate text-base text-white">
                 {model.name}
               </CardTitle>
-              <CardDescription className="line-clamp-2 text-xs leading-4 text-white/60 md:line-clamp-none">
+              <CardDescription className="line-clamp-2 text-xs leading-4 text-white/60 lg:line-clamp-3">
                 {model.description}
               </CardDescription>
             </div>

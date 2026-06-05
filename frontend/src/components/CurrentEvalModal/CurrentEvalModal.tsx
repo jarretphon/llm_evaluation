@@ -47,8 +47,8 @@ export function CurrentEvalModal({
         ]
 
     return (
-      <div className="flex max-h-[80vh] flex-col gap-4 overflow-hidden px-6 py-5">
-        <div className="flex justify-between border-b border-border/60 py-5">
+      <div className="flex w-full flex-col gap-4 px-6 py-5">
+        <div className="flex shrink-0 justify-between border-b border-border/60 py-5">
           <h2 className="text-xl font-semibold tracking-tight">
             {evaluation.model.name}
           </h2>
