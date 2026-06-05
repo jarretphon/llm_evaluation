@@ -76,7 +76,7 @@ export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
       </CardHeader>
       <CardContent>
         {models.length ? (
-          <ChartContainer config={chartConfig} className="h-[260px] w-full">
+          <ChartContainer config={chartConfig} className="h-65 w-full">
             <RadarChart data={chartData} outerRadius="68%">
               <PolarGrid stroke="rgba(255,255,255,0.08)" />
               <PolarAngleAxis
@@ -103,7 +103,7 @@ export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
             </RadarChart>
           </ChartContainer>
         ) : (
-          <div className="flex h-[260px] items-center justify-center text-sm text-white/50">
+          <div className="flex h-65 items-center justify-center text-sm text-white/50">
             Select models to render the radar chart.
           </div>
         )}
