@@ -1,8 +1,10 @@
+import { type Benchmark, benchmarks } from "./benchmarks"
+
 export interface BenchmarkCategory {
   id: string
   label: string
   description: string
-  benchmarkIds: string[]
+  benchmarks: Benchmark[]
 }
 
 export const benchmarkCategories: BenchmarkCategory[] = [
@@ -10,24 +12,34 @@ export const benchmarkCategories: BenchmarkCategory[] = [
     id: "reasoning",
     label: "Reasoning",
     description: "Math, logic, and long-context reasoning",
-    benchmarkIds: ["gsm8k", "mmlu", "bbh", "longbench"],
+    benchmarks: benchmarks.filter((benchmark) =>
+      ["gsm8k", "mmlu", "bbh", "longbench"].includes(benchmark.id)
+    ),
   },
   {
     id: "coding",
     label: "Coding",
     description: "Code generation and multi-turn quality",
-    benchmarkIds: ["humaneval", "mt-bench", "arena-hard", "api-bank"],
+    benchmarks: benchmarks.filter((benchmark) =>
+      ["humaneval", "mt-bench", "arena-hard"].includes(benchmark.id)
+    ),
   },
   {
     id: "tooling",
     label: "Tool Use",
     description: "Tool orchestration and function calling",
-    benchmarkIds: ["toolbench", "bfcl", "gorilla", "truthfulqa"],
+    benchmarks: benchmarks.filter((benchmark) =>
+      ["toolbench", "bfcl", "gorilla", "truthfulqa"].includes(benchmark.id)
+    ),
   },
   {
     id: "safety",
     label: "Safety",
     description: "Refusal and safety compliance",
-    benchmarkIds: ["advbench", "safetybench", "wildguard", "refusalqa"],
+    benchmarks: benchmarks.filter((benchmark) =>
+      ["advbench", "safetybench", "wildguard", "refusalqa"].includes(
+        benchmark.id
+      )
+    ),
   },
 ]

@@ -22,7 +22,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { benchmarks } from "@/data/benchmarks"
 import type { BenchmarkCategory } from "@/data/benchmark-categories"
 import type { Model } from "@/data/models"
 import { getBenchmarkScore } from "@/data/model-benchmark-scores"
@@ -40,7 +39,7 @@ type ModelRadarChartProps = {
   models: Model[]
 }
 
-export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
+export function EvaluationChart({ category, models }: ModelRadarChartProps) {
   const chartConfig = useMemo(() => {
     return models.reduce<ChartConfig>((acc, model, index) => {
       acc[model.id] = {
@@ -52,19 +51,18 @@ export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
   }, [models])
 
   const chartData = useMemo(() => {
-    return category.benchmarkIds.map((benchmarkId) => {
-      const benchmark = benchmarks.find((item) => item.id === benchmarkId)
+    return category.benchmarks.map((benchmark) => {
       const row: Record<string, number | string> = {
-        benchmark: benchmark?.name ?? benchmarkId,
+        benchmark: benchmark.name,
       }
 
       models.forEach((model) => {
-        row[model.id] = getBenchmarkScore(model.id, benchmarkId)
+        row[model.id] = getBenchmarkScore(model.id, benchmark.id)
       })
 
       return row
     })
-  }, [category.benchmarkIds, models])
+  }, [category.benchmarks, models])
 
   return (
     <Card className="border border-border/60 bg-[#151515] text-white">
@@ -76,9 +74,12 @@ export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
       </CardHeader>
       <CardContent>
         {models.length ? (
-          <ChartContainer config={chartConfig} className="h-65 w-full">
-            <RadarChart data={chartData} outerRadius="68%">
-              <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-90 w-full"
+          >
+            <RadarChart data={chartData}>
+              <PolarGrid gridType="circle" className="fill-muted/50" />
               <PolarAngleAxis
                 dataKey="benchmark"
                 tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11 }}
@@ -86,7 +87,7 @@ export function ModelRadarChart({ category, models }: ModelRadarChartProps) {
               <PolarRadiusAxis
                 angle={30}
                 domain={[0, 100]}
-                tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 10 }}
+                tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 11 }}
               />
               <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
               <ChartLegend content={<ChartLegendContent />} />
