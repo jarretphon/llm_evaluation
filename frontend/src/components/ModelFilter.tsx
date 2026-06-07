@@ -16,7 +16,7 @@ import {
 import { Card } from "@/components/ui/card"
 import { Item, ItemContent, ItemTitle } from "@/components/ui/item"
 import { Input } from "@/components/ui/input"
-import { AddModelModal } from "./AddModelModal/AddModelModal"
+import { AddModelModal } from "./AddModelDialog/AddModelDialog"
 import { useState } from "react"
 
 const SearchField = ({ placeholder }: { placeholder: string }) => {

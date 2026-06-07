@@ -1,30 +1,34 @@
-import { useIsMobile } from "@/hooks/use-mobile.ts"
-import { CurrentEvalDialog } from "@/components/CurrentEvalModal/CurrentEvalDialog"
-import { CurrentEvalDrawer } from "@/components/CurrentEvalModal/CurrentEvalDrawer"
 import type { EvaluationRecord } from "@/data/evaluations"
 import type { Model } from "@/data/models"
 
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import type { BenchmarkRecord } from "@/data/benchmarks"
-import { EvalProgress } from "@/components/CurrentEvalModal/EvalProgress"
+import { EvalProgress } from "@/components/CurrentEvalDialog/EvalProgress"
 import { BenchmarkTable } from "./BenchmarkTable"
 import { EvalDurationStats } from "./EvalDurationStats"
+import { ResponsiveDialog } from "@/components/ResponsiveDialog"
+
 interface ModalProps {
   isOpen: boolean
-  setIsOpen: (open: boolean) => void
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
   evaluation: (EvaluationRecord & { model: Model }) | null
   onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
 }
 
-export function CurrentEvalModal({
+const dialogTexts = {
+  title: "Evaluation Details",
+  description: "View the details of the current evaluation.",
+  primaryActionLabel: "Rerun",
+  secondaryActionLabel: "Close",
+}
+
+export function CurrentEvalDialog({
   isOpen,
   setIsOpen,
   evaluation,
   onRetryBenchmark,
 }: ModalProps) {
-  const isMobile = useIsMobile()
-
   const content = useMemo(() => {
     if (!evaluation) {
       return null
@@ -47,7 +51,7 @@ export function CurrentEvalModal({
         ]
 
     return (
-      <div className="flex w-full flex-col gap-4 px-6 py-5">
+      <div className="flex w-full flex-col gap-4">
         <div className="flex shrink-0 justify-between border-b border-border/60 py-5">
           <h2 className="text-xl font-semibold tracking-tight">
             {evaluation.model.name}
@@ -67,13 +71,13 @@ export function CurrentEvalModal({
     )
   }, [evaluation, onRetryBenchmark])
 
-  return isMobile ? (
-    <CurrentEvalDrawer isOpen={isOpen} setIsOpen={setIsOpen}>
+  return (
+    <ResponsiveDialog
+      dialogTexts={dialogTexts}
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+    >
       {content}
-    </CurrentEvalDrawer>
-  ) : (
-    <CurrentEvalDialog isOpen={isOpen} setIsOpen={setIsOpen}>
-      {content}
-    </CurrentEvalDialog>
+    </ResponsiveDialog>
   )
 }

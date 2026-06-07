@@ -2,8 +2,8 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { ArrowLeft, CirclePlay } from "lucide-react"
 
-import { CurrentEvalModal } from "@/components/CurrentEvalModal/CurrentEvalModal"
-import { NewEvalModal } from "@/components/NewEvalModal/NewEvalModal"
+import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
+import { NewEvalDialog } from "@/components/NewEvalDialog/NewEvalDialog"
 import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
 
 import { Button } from "@/components/ui/button"
@@ -93,8 +93,8 @@ export function ModelDetails() {
         }}
       />
 
-      <NewEvalModal isOpen={isNewEvalOpen} setIsOpen={setIsNewEvalOpen} />
-      <CurrentEvalModal
+      <NewEvalDialog isOpen={isNewEvalOpen} setIsOpen={setIsNewEvalOpen} />
+      <CurrentEvalDialog
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}
         evaluation={activeEvaluation}

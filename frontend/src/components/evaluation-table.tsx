@@ -7,8 +7,8 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { NewEvalModal } from "@/components/NewEvalModal/NewEvalModal"
-import { CurrentEvalModal } from "@/components/CurrentEvalModal/CurrentEvalModal"
+import { NewEvalDialog } from "@/components/NewEvalDialog/NewEvalDialog"
+import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
 
 import {
   evaluations,
@@ -205,8 +205,8 @@ export function EvaluationTable() {
           ))}
         </div>
       </Card>
-      <NewEvalModal isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
-      <CurrentEvalModal
+      <NewEvalDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
+      <CurrentEvalDialog
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}
         evaluation={activeEvaluation}
