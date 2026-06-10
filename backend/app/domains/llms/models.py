@@ -12,14 +12,9 @@ class LLMModel(SQLModel, table=True):
     description: str
     provider: str
     added_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    evaluations: list["Evaluation"] = Relationship(
+
+    # Suppress undefined reference warning from pylance and ruff due to forward reference type checking
+    # Operation is safe as the relationship is defined in the related model and SQLModel handles the relationship resolution at runtime
+    evaluations: list["EvaluationModel"] = Relationship(  # type: ignore # noqa: F821
         back_populates="llm_entry", cascade_delete=True
     )
-
-
-class Evaluation(SQLModel, table=True):
-    __tablename__ = "evaluations"
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    llm_id: uuid.UUID = Field(foreign_key="llms.id", ondelete="CASCADE")
-    llm_entry: "LLMModel" = Relationship(back_populates="evaluations")
