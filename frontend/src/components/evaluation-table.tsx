@@ -15,13 +15,8 @@ import {
   type EvaluationRecord,
   type FilterOption,
 } from "@/data/evaluations"
-import type { Model } from "@/data/models"
 
-type EvaluationRecordWithModel = EvaluationRecord & {
-  model: Model
-}
-
-const evaluationRecords = evaluations as EvaluationRecordWithModel[]
+const evaluationRecords = evaluations
 
 const filters: Array<{ value: FilterOption; label: string }> = [
   { value: "all", label: "All" },
@@ -76,11 +71,7 @@ const FilterTabs = ({
   )
 }
 
-const EvaluationProgress = ({
-  record,
-}: {
-  record: EvaluationRecordWithModel
-}) => {
+const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
   const progress = record.metadata.progress ?? 0
   const type = record.evalStatus
 
@@ -111,8 +102,8 @@ const EvaluationRow = ({
   record,
   onSelect,
 }: {
-  record: EvaluationRecordWithModel
-  onSelect: (record: EvaluationRecordWithModel) => void
+  record: EvaluationRecord
+  onSelect: (record: EvaluationRecord) => void
 }) => {
   return (
     <div
@@ -143,7 +134,7 @@ export function EvaluationTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =
-    useState<EvaluationRecordWithModel | null>(null)
+    useState<EvaluationRecord | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("all")
   const searchPlaceholder = "Search models..."
   const filteredEvaluations = useMemo(
@@ -195,7 +186,7 @@ export function EvaluationTable() {
         <div className="mt-4 space-y-4">
           {filteredEvaluations.map((e) => (
             <EvaluationRow
-              key={e.id}
+              key={e.model.name}
               record={e}
               onSelect={(record) => {
                 setActiveEvaluation(record)

@@ -7,7 +7,7 @@ const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
   const type = record.evalStatus
 
   return type === "running" ? (
-    <div className="flex w-full flex-col gap-2 min-w-50 sm:flex-1 lg:max-w-90">
+    <div className="flex w-full min-w-50 flex-col gap-2 sm:flex-1 lg:max-w-90">
       <div className="w-full">
         <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
           <span>Status</span>
