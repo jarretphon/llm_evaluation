@@ -1,6 +1,7 @@
 import uuid
 
 from app.domains.evaluations.models import EvaluationModel
+from app.domains.llms.models import LLMModel
 from sqlmodel import Session, select
 
 
@@ -20,6 +21,12 @@ class EvaluationRepository:
 
     def create_evaluation(self, evaluation: EvaluationModel) -> EvaluationModel:
         self.session.add(evaluation)
+        self.session.commit()
+        self.session.refresh(evaluation)
+
+        return evaluation
+
+    def save_evaluation(self, evaluation: EvaluationModel) -> EvaluationModel:
         self.session.commit()
         self.session.refresh(evaluation)
 

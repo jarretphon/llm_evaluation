@@ -34,11 +34,11 @@ class EvaluationMetadata(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, unique=True)
     evaluation_id: uuid.UUID = Field(foreign_key="evaluations.id")
     started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    duration: float
+    duration: float = Field(default=0.0)
     completed_at: Optional[datetime] = Field(default=None)
     estimated_end_time: Optional[datetime] = Field(default=None)
-    progress: Optional[float] = Field(default=None)
-    evaluation_status: EvaluationStatus
+    progress: float = Field(default=0.0)
+    evaluation_status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="metadata_entry")
 
@@ -51,7 +51,7 @@ class BenchmarkModel(SQLModel, table=True):
     name: str
     description: str
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
-    progress: Optional[float] = Field(default=None)
+    progress: float = Field(default=0.0)
     score: Optional[float] = Field(default=None)
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="benchmarks")
