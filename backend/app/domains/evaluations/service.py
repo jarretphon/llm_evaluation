@@ -75,6 +75,7 @@ class EvaluationService:
 
         try:
             results = self._run_lm_eval(
+                model = "local-chat-completions",
                 base_url=evaluation_create.model_endpoint,
                 model_name=evaluation_create.model_name,
                 tasks=[benchmark.name for benchmark in evaluation.benchmarks],
@@ -100,12 +101,13 @@ class EvaluationService:
 
     def _run_lm_eval(
         self,
+        model: str,
         base_url: str,
         model_name: str,
         tasks: list[str],
     ) -> dict[str, dict[str, Any]]:
         evaluation_results = lm_eval.simple_evaluate(
-            model="local-chat-completions",
+            model=model,
             model_args={"model": model_name, "base_url": base_url},
             tasks=tasks,
             task_manager=TaskManager(),
