@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class BenchmarkBase(BaseModel):
@@ -28,13 +28,14 @@ class EvaluationMetadata(BaseModel):
     estimated_end_time: datetime | None = None
     progress: float | None = None
 
+
 class EvaluationBase(BaseModel):
     benchmarks: list[BenchmarkCreate]
 
 
 class EvaluationCreate(EvaluationBase):
     model_endpoint: str
-    model_name: str = "default"
+    model_name: str = "occaecat"
     benchmarks: list[BenchmarkCreate]
 
 

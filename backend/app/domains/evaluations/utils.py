@@ -1,10 +1,12 @@
-import lm_eval
 from lm_eval.tasks import TaskManager
 from lm_eval.tasks.manager import Kind
-from lm_eval.api.task import Task
-from lm_eval.api.group import Group
 
-OUTPUT_TYPES = ["multiple_choice", "loglikelihood_rolling", "loglikelihood", "generate_until"]
+OUTPUT_TYPES = [
+    "multiple_choice",
+    "loglikelihood_rolling",
+    "loglikelihood",
+    "generate_until",
+]
 COMPLETIONS_TYPES = ["multiple_choice", "loglikelihood_rolling", "loglikelihood"]
 
 task_manager = TaskManager()
@@ -13,17 +15,21 @@ mmlu = "mmlu"
 
 task_config = task_manager.task_index[hella_swag].kind
 
+
 def is_task(task_name):
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.TASK
+
 
 def is_group(task_name):
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.GROUP
 
+
 def is_tag(task_name):
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.TAG
+
 
 def require_completions(task_name):
     task_entry = task_manager.task_index[task_name]
@@ -39,10 +45,10 @@ def get_group_tasks(group_name: str, task_manager: TaskManager) -> list[str]:
 
     if group_name not in index:
         return []
-    
+
     if is_task(group_name):
         return [group_name]
-    
+
     else:
         sub_tasks = []
 
@@ -55,9 +61,9 @@ def get_group_tasks(group_name: str, task_manager: TaskManager) -> list[str]:
             sub_tasks.extend(get_group_tasks(item, task_manager))
 
         return sub_tasks
-    
 
-print(get_group_tasks("mmlu", task_manager))
+
+# print(get_group_tasks("mmlu", task_manager))
 
 
 # output_types = []
@@ -72,7 +78,6 @@ print(get_group_tasks("mmlu", task_manager))
 #     else:
 #         # 2. Handles internal base-templates or unpopulated items safely
 #         print(f"Task: {task_name}, output_type: [] (No configuration file loaded)")
-
 
 
 # print(set(output_types))

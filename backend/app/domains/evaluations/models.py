@@ -18,6 +18,7 @@ class EvaluationModel(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     llm_id: uuid.UUID = Field(foreign_key="llms.id", ondelete="CASCADE")
+    status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
     metadata_entry: "EvaluationMetadata" = Relationship(
         back_populates="evaluation_entry"
     )
@@ -51,7 +52,7 @@ class BenchmarkModel(SQLModel, table=True):
     name: str
     description: str
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
-    progress: float = Field(default=0.0)
+    # progress: float = Field(default=0.0)
     score: Optional[float] = Field(default=None)
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="benchmarks")

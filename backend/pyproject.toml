@@ -12,5 +12,6 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "ruff>=0.15.13",
     "sqlmodel>=0.0.38",
+    "transformers>=5.12.0",
     "uvicorn[standard]>=0.47.0",
 ]

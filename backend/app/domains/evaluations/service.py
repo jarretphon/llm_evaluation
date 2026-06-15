@@ -1,13 +1,7 @@
 import uuid
-from datetime import UTC, datetime
-from time import perf_counter
-from typing import Any, Optional
+from typing import Any
 
 import lm_eval
-from lm_eval.tasks import TaskManager
-from sqlmodel import Session
-
-from app.db.session import engine
 from app.domains.evaluations.errors import EvaluationNotFoundError
 from app.domains.evaluations.models import (
     BenchmarkModel,
@@ -17,17 +11,7 @@ from app.domains.evaluations.models import (
 )
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.schemas import EvaluationCreate
-from app.domains.llms.errors import LLMNotFoundError
-
-
-def run_evaluation_background_task(
-    evaluation_id: uuid.UUID,
-    model_name: str,
-    limit: int,
-) -> None:
-    with Session(engine) as session:
-        service = EvaluationService(EvaluationRepository(session))
-        service.start_evaluation(evaluation_id, model_name, limit)
+from app.domains.evaluations.utils import require_completions
 
 
 class EvaluationService:
@@ -38,7 +22,6 @@ class EvaluationService:
         self, offset: int = 0, limit: int = 10
     ) -> list[EvaluationModel]:
         return self.repository.list_evaluations(offset=offset, limit=limit)
-        
 
     def get_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
         evaluation = self.repository.get_by_id(evaluation_id)
@@ -48,11 +31,9 @@ class EvaluationService:
 
         return evaluation
 
-    def start_evaluation(
+    def create_evaluation(
         self, llm_id: uuid.UUID, evaluation_create: EvaluationCreate
     ) -> EvaluationModel:
-        
-        # Initialise evaluation entry in database
         evaluation = EvaluationModel(
             llm_id=llm_id,
             metadata_entry=EvaluationMetadata(),
@@ -63,69 +44,86 @@ class EvaluationService:
         )
 
         self.repository.create_evaluation(evaluation)
+        return evaluation
 
-        # Run evaluation and update database entry with results
-        meta = evaluation.metadata_entry
+    def start_evaluation(
+        self, evaluation: EvaluationModel, evaluation_create: EvaluationCreate
+    ) -> EvaluationModel:
 
-        started_at = perf_counter()
-        meta.evaluation_status = EvaluationStatus.RUNNING
+        self._set_status(evaluation, EvaluationStatus.RUNNING)
+        total_benchmarks = len(evaluation.benchmarks)
+        num_benchmarks_evaluated = 0
+
         for benchmark in evaluation.benchmarks:
-            benchmark.status = EvaluationStatus.RUNNING
-        self.repository.save_evaluation(evaluation)
+            self._set_status(benchmark, EvaluationStatus.RUNNING)
+            try:
+                eval_results = self._run_lm_eval(
+                    base_url=evaluation_create.model_endpoint,
+                    model_name=evaluation_create.model_name,
+                    task=benchmark.name,
+                )
+            except Exception as e:
+                print(
+                    f"Error occurred while running LM eval for benchmark {benchmark.name}: {e}"
+                )
+                self._set_status(benchmark, EvaluationStatus.FAILED)
+            else:
+                self._set_status(benchmark, EvaluationStatus.COMPLETED)
+                self._update_benchmark_results(eval_results.get("results", {}))
 
-        try:
-            results = self._run_lm_eval(
-                model = "local-chat-completions",
-                base_url=evaluation_create.model_endpoint,
-                model_name=evaluation_create.model_name,
-                tasks=[benchmark.name for benchmark in evaluation.benchmarks],
+            num_benchmarks_evaluated += 1
+            self._update_evaluation_progress(
+                evaluation, total_benchmarks, num_benchmarks_evaluated
             )
-        except Exception:
-            meta.evaluation_status = EvaluationStatus.FAILED
-            for benchmark in evaluation.benchmarks:
-                benchmark.status = EvaluationStatus.FAILED
+
+        self._set_status(evaluation, EvaluationStatus.COMPLETED)
+
+        return evaluation
+
+    def _run_lm_eval(self, base_url: str, model_name: str, task: str):
+        model_args = {
+            "model": model_name,
+            "base_url": base_url,
+        }
+
+        if require_completions(task):
+            results = lm_eval.simple_evaluate(
+                model="local-completions",
+                model_args=model_args,
+                tasks=[task],
+            )
         else:
-            meta.evaluation_status = EvaluationStatus.COMPLETED
-            meta.progress = 100.0
-            for benchmark in evaluation.benchmarks:
-                benchmark_result = results.get(benchmark.name, {})
-                benchmark.status = EvaluationStatus.COMPLETED
-                benchmark.score = self._extract_score(benchmark_result)
-                benchmark.progress = 100.0
+            results = lm_eval.simple_evaluate(
+                model="local-chat-completions",
+                model_args=model_args,
+                tasks=[task],
+                apply_chat_template=True,
+            )
+        return results
 
-        meta.duration = perf_counter() - started_at
-        meta.completed_at = datetime.now(UTC)
-        meta.progress = 100.0
-        return self.repository.save_evaluation(evaluation)
+    def _set_status(
+        self, model: EvaluationModel | BenchmarkModel, status: EvaluationStatus
+    ) -> None:
+        model.status = status
 
-
-    def _run_lm_eval(
-        self,
-        model: str,
-        base_url: str,
-        model_name: str,
-        tasks: list[str],
-    ) -> dict[str, dict[str, Any]]:
-        evaluation_results = lm_eval.simple_evaluate(
-            model=model,
-            model_args={"model": model_name, "base_url": base_url},
-            tasks=tasks,
-            task_manager=TaskManager(),
-            apply_chat_template=True,
-        )
-
-        if evaluation_results is None:
-            return {}
-
-        if isinstance(evaluation_results, dict):
-            return evaluation_results.get("results", {})
-
-        return getattr(evaluation_results, "results", {})
-
-    def _extract_score(self, benchmark_result: dict[str, Any]) -> float | None:
+    def _update_benchmark_results(
+        self, benchmark_result: dict[str, Any]
+    ) -> float | None:
         for metric_name, value in benchmark_result.items():
             if metric_name.endswith("_stderr"):
                 continue
             if isinstance(value, int | float):
                 return float(value)
         return None
+
+    def _update_evaluation_progress(
+        self,
+        evaluation: EvaluationModel,
+        total_tasks: int,
+        num_evaluated: int,
+    ) -> None:
+        if total_tasks == 0:
+            evaluation.metadata_entry.progress = 100.0
+        else:
+            evaluation.metadata_entry.progress = (num_evaluated / total_tasks) * 100
+        self.repository.save_evaluation(evaluation)
