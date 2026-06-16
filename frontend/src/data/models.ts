@@ -4,8 +4,7 @@ import type { EvaluationRecord } from "@/data/evaluations"
 export interface Model {
   id: string
   provider: string
-  symbol: string
-  name: string
+  endpoint: string
   description: string
   addedAt: string
   evaluations: EvaluationRecord[]
@@ -15,8 +14,7 @@ export const models: Model[] = [
   {
     id: "claude-opus-4-7",
     provider: "Anthropic",
-    symbol: "ANTP",
-    name: "Claude Opus 4.7",
+    endpoint: "Claude Opus 4.7",
     description:
       "Frontier reasoning model tuned for long-form analysis, tool use, and high-accuracy evaluation tasks.",
     addedAt: "2026-05-19",
@@ -142,8 +140,7 @@ export const models: Model[] = [
   {
     id: "gpt-5-5",
     provider: "OpenAI",
-    symbol: "OPEN",
-    name: "GPT-5.5",
+    endpoint: "GPT-5.5",
     description:
       "General-purpose multimodal model with strong coding, instruction following, and benchmark stability.",
     addedAt: "2026-05-23",
@@ -256,8 +253,7 @@ export const models: Model[] = [
   {
     id: "claude-opus-4-6",
     provider: "Anthropic",
-    symbol: "ANTP",
-    name: "Claude Opus 4.6",
+    endpoint: "Claude Opus 4.6",
     description:
       "Previous production reasoning model used as a baseline for regression and latency comparisons.",
     addedAt: "2026-04-28",
@@ -364,8 +360,7 @@ export const models: Model[] = [
   {
     id: "gemini-flash-3-5",
     provider: "Gemini",
-    symbol: "GEM",
-    name: "Gemini Flash 3.5",
+    endpoint: "Gemini Flash 3.5",
     description:
       "Low-latency model optimized for high-volume evaluation sweeps and fast interactive workloads.",
     addedAt: "2026-05-12",
@@ -474,8 +469,7 @@ export const models: Model[] = [
   {
     id: "deep-seek-2-3",
     provider: "DeepSeek",
-    symbol: "DS",
-    name: "Deep Seek 2.3",
+    endpoint: "Deep Seek 2.3",
     description:
       "Reasoning and code-focused model with competitive math performance and efficient inference cost.",
     addedAt: "2026-04-15",

@@ -1,5 +1,5 @@
 import type { EvaluationRecord } from "@/data/evaluations"
-import type { Model } from "@/data/models"
+import type { components } from "@/types/schema"
 
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -9,10 +9,12 @@ import { BenchmarkTable } from "./BenchmarkTable"
 import { EvalDurationStats } from "./EvalDurationStats"
 import { ResponsiveDialog } from "@/components/ResponsiveDialog"
 
+type Model = components["schemas"]["LLMRead"]
 interface ModalProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  evaluation: (EvaluationRecord & { model: Model }) | null
+  model: Model
+  evaluation: EvaluationRecord | null
   onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
 }
 
@@ -26,6 +28,7 @@ const dialogTexts = {
 export function CurrentEvalDialog({
   isOpen,
   setIsOpen,
+  model,
   evaluation,
   onRetryBenchmark,
 }: ModalProps) {
@@ -54,7 +57,7 @@ export function CurrentEvalDialog({
       <div className="flex w-full flex-col gap-4">
         <div className="flex shrink-0 justify-between border-b border-border/60 py-5">
           <h2 className="text-xl font-semibold tracking-tight">
-            {evaluation.model.name}
+            {model.endpoint}
           </h2>
           <Badge className="ml-auto w-fit px-2.5 capitalize">
             {evaluation.evalStatus}
@@ -69,7 +72,7 @@ export function CurrentEvalDialog({
         />
       </div>
     )
-  }, [evaluation, onRetryBenchmark])
+  }, [evaluation, onRetryBenchmark, model])
 
   return (
     <ResponsiveDialog

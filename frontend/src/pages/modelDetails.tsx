@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowLeft, CirclePlay } from "lucide-react"
 
 import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
@@ -8,22 +8,15 @@ import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import type { EvaluationRecord } from "@/data/evaluations"
-import { models, type Model } from "@/data/models"
+// import type { EvaluationRecord } from "@/data/evaluations"
+// import type { Model } from "@/data/models"
+import { modelService } from "@/services/models/user.service"
+import type { components } from "@/types/schema"
 
-type EvaluationWithModel = EvaluationRecord & {
-  model: Model
-}
+type Model = components["schemas"]["LLMRead"]
+type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
-const attachModel = (
-  model: Model,
-  evaluation: EvaluationRecord
-): EvaluationWithModel => ({
-  ...evaluation,
-  model,
-})
-
-const EmptyState = () => {
+const EmptyState = ({ message }: { message?: string }) => {
   const navigate = useNavigate()
 
   return (
@@ -37,7 +30,7 @@ const EmptyState = () => {
       </Button>
       <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
         <CardContent className="py-10 text-sm text-white/60">
-          This model could not be found.
+          {message ?? "This model could not be found."}
         </CardContent>
       </Card>
     </div>
@@ -47,14 +40,39 @@ const EmptyState = () => {
 export function ModelDetails() {
   const { modelId } = useParams()
   const navigate = useNavigate()
+
+  const [model, setModel] = useState<Model | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
   const [isNewEvalOpen, setIsNewEvalOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =
-    useState<EvaluationWithModel | null>(null)
-  const model = models.find((item) => item.id === modelId) ?? null
+    useState<EvaluationRecord | null>(null)
+
+  useEffect(() => {
+    if (!modelId) {
+      navigate("/models", { replace: true })
+      return
+    }
+
+    modelService
+      .getModelById(modelId)
+      .then((data: Model) => setModel(data))
+      .catch((err: Error) => setError(err))
+      .finally(() => setLoading(false))
+  }, [modelId, navigate])
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
+      </div>
+    )
+  }
 
   if (!model) {
-    return <EmptyState />
+    return <EmptyState message={error?.message} />
   }
 
   return (
@@ -69,7 +87,9 @@ export function ModelDetails() {
         </Button>
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold md:text-3xl">{model.name}</h1>
+            <h1 className="text-2xl font-semibold md:text-3xl">
+              {model.endpoint}
+            </h1>
             <p className="mt-1 line-clamp-2 text-sm text-white/60 md:line-clamp-none">
               {model.description}
             </p>
@@ -88,7 +108,7 @@ export function ModelDetails() {
       <ModelEvaluationPanel
         model={model}
         onSelectEvaluation={(evaluation) => {
-          setActiveEvaluation(attachModel(model, evaluation))
+          setActiveEvaluation(evaluation)
           setIsDetailsOpen(true)
         }}
       />
@@ -98,6 +118,7 @@ export function ModelDetails() {
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}
         evaluation={activeEvaluation}
+        model={model}
       />
     </div>
   )

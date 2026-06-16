@@ -7,7 +7,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { Model } from "@/data/models"
+import type { components } from "@/types/schema"
+
+type Model = components["schemas"]["LLMRead"]
 
 export type ModelRunStats = {
   running: number
@@ -20,7 +22,6 @@ export type ModelRunStats = {
 
 type ModelCardProps = {
   model: Model
-  stats: ModelRunStats
   onSelect: (modelId: string) => void
 }
 
@@ -38,7 +39,7 @@ const formatAddedDate = (value: string) => {
   })
 }
 
-export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
+export function ModelCard({ model, onSelect }: ModelCardProps) {
   return (
     <button
       type="button"
@@ -49,11 +50,11 @@ export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
         <div className="flex justify-between gap-4 px-6">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-bold text-white">
-              {model.symbol}
+              OPEN
             </div>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-base text-white">
-                {model.name}
+                {model.endpoint}
               </CardTitle>
               <CardDescription className="line-clamp-2 text-xs leading-4 text-white/60 lg:line-clamp-3">
                 {model.description}
@@ -61,11 +62,8 @@ export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
             </div>
           </div>
           <div>
-            <Badge
-              variant={stats.running > 0 ? "default" : "outline"}
-              className="rounded-full px-2"
-            >
-              {stats.running > 0 ? `${stats.running} active` : "No active"}
+            <Badge variant="default" className="rounded-full px-2">
+              1 Active Run
             </Badge>
           </div>
         </div>
@@ -73,13 +71,13 @@ export function ModelCard({ model, stats, onSelect }: ModelCardProps) {
           <div className="flex flex-col gap-2 text-xs text-white/60">
             <div className="flex items-center gap-2">
               <Calendar className="size-3.5" />
-              Added {formatAddedDate(model.addedAt)}
+              Added {formatAddedDate(model.added_at)}
             </div>
             <div className="flex items-center gap-2 sm:col-span-2">
               <span className="text-[11px] font-semibold tracking-[0.18em] text-white/40 uppercase">
                 Last run
               </span>
-              <span>{stats.latestRunLabel ?? "No runs yet"}</span>
+              <span>{"No runs yet"}</span>
             </div>
           </div>
         </CardContent>

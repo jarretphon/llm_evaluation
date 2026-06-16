@@ -1,0 +1,617 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Users API", "version": "0.1.0" },
+  "paths": {
+    "/users": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Get All Users",
+        "operationId": "get_all_users_users_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserRead" },
+                  "title": "Response Get All Users Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["users"],
+        "summary": "Create User",
+        "operationId": "create_user_users_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Read User",
+        "operationId": "read_user_users__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "User Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llms": {
+      "get": {
+        "tags": ["llms"],
+        "summary": "Get All Llms",
+        "operationId": "get_all_llms_llms_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LLMRead" },
+                  "title": "Response Get All Llms Llms Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["llms"],
+        "summary": "Create Llm",
+        "operationId": "create_llm_llms_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LLMCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LLMRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llms/{llm_id}": {
+      "get": {
+        "tags": ["llms"],
+        "summary": "Read Llm",
+        "operationId": "read_llm_llms__llm_id__get",
+        "parameters": [
+          {
+            "name": "llm_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Llm Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LLMRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["llms"],
+        "summary": "Edit Llm",
+        "operationId": "edit_llm_llms__llm_id__patch",
+        "parameters": [
+          {
+            "name": "llm_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Llm Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LLMUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LLMRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["llms"],
+        "summary": "Delete Llm",
+        "operationId": "delete_llm_llms__llm_id__delete",
+        "parameters": [
+          {
+            "name": "llm_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Llm Id" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluations": {
+      "get": {
+        "tags": ["evaluations"],
+        "summary": "Get All Evaluations",
+        "operationId": "get_all_evaluations_evaluations_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10, "title": "Limit" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EvaluationRead" },
+                  "title": "Response Get All Evaluations Evaluations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["evaluations"],
+        "summary": "Create Evaluation",
+        "operationId": "create_evaluation_evaluations_post",
+        "parameters": [
+          {
+            "name": "llm_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Llm Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EvaluationCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EvaluationRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluations/{evaluation_id}": {
+      "get": {
+        "tags": ["evaluations"],
+        "summary": "Get Evaluation",
+        "operationId": "get_evaluation_evaluations__evaluation_id__get",
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Evaluation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EvaluationRead" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BenchmarkCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "description": { "type": "string", "title": "Description" }
+        },
+        "type": "object",
+        "required": ["name", "description"],
+        "title": "BenchmarkCreate"
+      },
+      "BenchmarkRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "description": { "type": "string", "title": "Description" },
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "status": { "type": "string", "title": "Status" },
+          "progress": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Progress"
+          },
+          "score": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": ["name", "description", "id", "status"],
+        "title": "BenchmarkRead"
+      },
+      "EvaluationCreate": {
+        "properties": {
+          "benchmarks": {
+            "items": { "$ref": "#/components/schemas/BenchmarkCreate" },
+            "type": "array",
+            "title": "Benchmarks"
+          },
+          "model_endpoint": { "type": "string", "title": "Model Endpoint" },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "default": "occaecat"
+          }
+        },
+        "type": "object",
+        "required": ["benchmarks", "model_endpoint"],
+        "title": "EvaluationCreate"
+      },
+      "EvaluationMetadata": {
+        "properties": {
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "duration": { "type": "number", "title": "Duration" },
+          "evaluation_status": {
+            "type": "string",
+            "title": "Evaluation Status"
+          },
+          "completed_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Completed At"
+          },
+          "estimated_end_time": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Estimated End Time"
+          },
+          "progress": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Progress"
+          }
+        },
+        "type": "object",
+        "required": ["started_at", "duration", "evaluation_status"],
+        "title": "EvaluationMetadata"
+      },
+      "EvaluationRead": {
+        "properties": {
+          "benchmarks": {
+            "items": { "$ref": "#/components/schemas/BenchmarkRead" },
+            "type": "array",
+            "title": "Benchmarks"
+          },
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "metadata_entry": {
+            "$ref": "#/components/schemas/EvaluationMetadata"
+          }
+        },
+        "type": "object",
+        "required": ["benchmarks", "id", "metadata_entry"],
+        "title": "EvaluationRead"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LLMCreate": {
+        "properties": {
+          "endpoint": { "type": "string", "title": "Endpoint" },
+          "description": { "type": "string", "title": "Description" },
+          "provider": { "type": "string", "title": "Provider" }
+        },
+        "type": "object",
+        "required": ["endpoint", "description", "provider"],
+        "title": "LLMCreate"
+      },
+      "LLMRead": {
+        "properties": {
+          "endpoint": { "type": "string", "title": "Endpoint" },
+          "description": { "type": "string", "title": "Description" },
+          "provider": { "type": "string", "title": "Provider" },
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "added_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Added At"
+          }
+        },
+        "type": "object",
+        "required": ["endpoint", "description", "provider", "id", "added_at"],
+        "title": "LLMRead"
+      },
+      "LLMUpdate": {
+        "properties": {
+          "endpoint": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Endpoint"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "provider": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Provider"
+          }
+        },
+        "type": "object",
+        "title": "LLMUpdate"
+      },
+      "UserCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "email": { "type": "string", "title": "Email" }
+        },
+        "type": "object",
+        "required": ["name", "email"],
+        "title": "UserCreate"
+      },
+      "UserRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "email": { "type": "string", "title": "Email" },
+          "id": { "type": "integer", "title": "Id" }
+        },
+        "type": "object",
+        "required": ["name", "email", "id"],
+        "title": "UserRead"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" },
+          "input": { "title": "Input" },
+          "ctx": { "type": "object", "title": "Context" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

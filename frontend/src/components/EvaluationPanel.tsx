@@ -11,11 +11,15 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 
-import type { EvaluationRecord } from "@/data/evaluations"
-import type { Model } from "@/data/models"
+// import type { EvaluationRecord } from "@/data/evaluations"
+// import type { Model } from "@/data/models"
 import { EvaluationCard } from "@/components/EvaluationCard"
 import { type dateFilter, TimeRangeFilter } from "@/components/TimeRangeFilter"
 import { sortEvaluationsBy } from "@/utils/helpers"
+import type { components } from "@/types/schema"
+
+type Model = components["schemas"]["LLMRead"]
+type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
 type ModelEvaluationPanelProps = {
   model: Model
