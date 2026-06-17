@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+from app.domains.evaluations.schemas import EvaluationRead
 from pydantic import BaseModel
 
 
@@ -17,6 +18,7 @@ class LLMCreate(LLMBase):
 class LLMRead(LLMBase):
     id: uuid.UUID
     added_at: datetime
+    evaluations: list[EvaluationRead]
 
 
 class LLMUpdate(BaseModel):
