@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ArrowLeft, CirclePlay } from "lucide-react"
 
 import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
@@ -8,12 +8,11 @@ import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-// import type { EvaluationRecord } from "@/data/evaluations"
-// import type { Model } from "@/data/models"
+import { toast } from "sonner"
 import { modelService } from "@/services/models/user.service"
 import type { components } from "@/types/schema"
+import { useQuery } from "@tanstack/react-query"
 
-type Model = components["schemas"]["LLMRead"]
 type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
 const EmptyState = ({ message }: { message?: string }) => {
@@ -41,29 +40,18 @@ export function ModelDetails() {
   const { modelId } = useParams()
   const navigate = useNavigate()
 
-  const [model, setModel] = useState<Model | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
   const [isNewEvalOpen, setIsNewEvalOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =
     useState<EvaluationRecord | null>(null)
 
-  useEffect(() => {
-    if (!modelId) {
-      navigate("/models", { replace: true })
-      return
-    }
+  const { data, isPending, error } = useQuery({
+    queryKey: ["model", modelId],
+    queryFn: () => modelService.getModelById(modelId ?? ""),
+    enabled: !!modelId,
+  })
 
-    modelService
-      .getModelById(modelId)
-      .then((data: Model) => setModel(data))
-      .catch((err: Error) => setError(err))
-      .finally(() => setLoading(false))
-  }, [modelId, navigate])
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
@@ -71,8 +59,12 @@ export function ModelDetails() {
     )
   }
 
-  if (!model) {
-    return <EmptyState message={error?.message} />
+  if (error) {
+    toast.error(`Failed to load model: ${error.message}`)
+  }
+
+  if (!data) {
+    return <EmptyState message="This model could not be found." />
   }
 
   return (
@@ -88,10 +80,10 @@ export function ModelDetails() {
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold md:text-3xl">
-              {model.endpoint}
+              {data.endpoint}
             </h1>
             <p className="mt-1 line-clamp-2 text-sm text-white/60 md:line-clamp-none">
-              {model.description}
+              {data.description}
             </p>
           </div>
         </div>
@@ -106,7 +98,7 @@ export function ModelDetails() {
       </div>
 
       <ModelEvaluationPanel
-        model={model}
+        model={data}
         onSelectEvaluation={(evaluation) => {
           setActiveEvaluation(evaluation)
           setIsDetailsOpen(true)
@@ -118,7 +110,7 @@ export function ModelDetails() {
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}
         evaluation={activeEvaluation}
-        model={model}
+        model={data}
       />
     </div>
   )

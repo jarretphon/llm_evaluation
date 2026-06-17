@@ -1,4 +1,7 @@
 import { apiClient } from "@/services/api/client"
+import type { components } from "@/types/schema"
+
+type LLMCreate = components["schemas"]["LLMCreate"]
 
 export const modelService = {
   getAllModels: async () => {
@@ -25,11 +28,7 @@ export const modelService = {
     return data
   },
 
-  createModel: async (modelData: {
-    endpoint: string
-    description: string
-    provider: string
-  }) => {
+  createModel: async (modelData: LLMCreate) => {
     const { data, error } = await apiClient.POST("/llms", {
       body: modelData,
     })
@@ -39,5 +38,32 @@ export const modelService = {
     }
 
     return data
+  },
+
+  editModel: async (id: string, modelData: Partial<LLMCreate>) => {
+    const { data, error } = await apiClient.PATCH("/llms/{llm_id}", {
+      params: {
+        path: { llm_id: id },
+      },
+      body: modelData,
+    })
+
+    if (error) {
+      throw new Error(`Failed to update model: ${error.detail?.[0]?.msg}`)
+    }
+
+    return data
+  },
+
+  deleteModel: async (id: string) => {
+    const { error } = await apiClient.DELETE("/llms/{llm_id}", {
+      params: {
+        path: { llm_id: id },
+      },
+    })
+
+    if (error) {
+      throw new Error(`Failed to delete model: ${error.detail?.[0]?.msg}`)
+    }
   },
 }
