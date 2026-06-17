@@ -1,4 +1,5 @@
-import { type EvaluationRecord } from "@/data/evaluations"
+import type { components } from "@/types/schema"
+type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
 export function sortEvaluationsBy(
   evaluations: EvaluationRecord[],
@@ -7,8 +8,8 @@ export function sortEvaluationsBy(
 ): EvaluationRecord[] {
   if (type === "date") {
     return [...evaluations].sort((a, b) => {
-      const dateA = new Date(a.metadata.start).getTime()
-      const dateB = new Date(b.metadata.start).getTime()
+      const dateA = new Date(a.metadata_entry.started_at).getTime()
+      const dateB = new Date(b.metadata_entry.started_at).getTime()
       return order === "ascending" ? dateA - dateB : dateB - dateA
     })
   }

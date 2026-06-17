@@ -24,4 +24,20 @@ export const modelService = {
 
     return data
   },
+
+  createModel: async (modelData: {
+    endpoint: string
+    description: string
+    provider: string
+  }) => {
+    const { data, error } = await apiClient.POST("/llms", {
+      body: modelData,
+    })
+
+    if (error) {
+      throw new Error(`Failed to create model: ${error.detail?.[0]?.msg}`)
+    }
+
+    return data
+  },
 }

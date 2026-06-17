@@ -9,6 +9,7 @@ import { ModelDetails } from "@/pages/modelDetails"
 import { Evaluations } from "@/pages/evaluations"
 import { Compare } from "@/pages/compare"
 import { Leaderboard } from "@/pages/leaderboard"
+import { Toaster } from "@/components/ui/sonner"
 
 export function App() {
   return (
@@ -32,6 +33,8 @@ export function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </SidebarInset>
+
+      <Toaster />
     </SidebarProvider>
   )
 }

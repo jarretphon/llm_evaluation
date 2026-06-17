@@ -1,10 +1,12 @@
-import { type EvaluationRecord } from "@/data/evaluations"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import type { components } from "@/types/schema"
+
+type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
 const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
-  const progress = record.metadata.progress ?? 0
-  const type = record.evalStatus
+  const progress = record.metadata_entry.progress ?? 0
+  const type = record.metadata_entry.evaluation_status
 
   return type === "running" ? (
     <div className="flex w-full min-w-50 flex-col gap-2 sm:flex-1 lg:max-w-90">
@@ -47,7 +49,7 @@ export function EvaluationCard({
             {record.id}
           </h3>
           <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
-            Started {record.metadata.start}
+            Started {record.metadata_entry.started_at}
           </p>
         </div>
       </div>

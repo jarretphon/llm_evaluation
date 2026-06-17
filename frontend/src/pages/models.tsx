@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { ModelCard } from "@/components/ModelCard"
@@ -6,8 +6,8 @@ import { ModelFilter } from "@/components/ModelFilter"
 
 import { providers } from "@/data/providers"
 
-import type { components } from "@/types/schema"
 import { modelService } from "@/services/models/user.service"
+import { useQuery } from "@tanstack/react-query"
 
 // const getStatsForModel = (model: Model): ModelRunStats => {
 //   const sortedEvaluations = [...model.evaluations].sort((a, b) =>
@@ -36,35 +36,18 @@ import { modelService } from "@/services/models/user.service"
 //   }, {})
 // }
 
-type Model = components["schemas"]["LLMRead"]
-
 export function Models() {
   const navigate = useNavigate()
   const [selectedProvider, setSelectedProvider] = useState("All")
 
-  const [models, setModels] = useState<Model[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    modelService
-      .getAllModels()
-      .then((data: Model[]) => setModels(data))
-      .catch((err: Error) => setError(err))
-      .finally(() => setLoading(false))
-  }, [])
+  const { data, isPending, error } = useQuery({
+    queryKey: ["models"],
+    queryFn: () => modelService.getAllModels(),
+  })
 
   // const statsById = useMemo(() => getStatsById(), [])
-  const providerOptions = providers
 
-  const filteredModels = useMemo(() => {
-    if (selectedProvider === "All") {
-      return models
-    }
-    return models.filter((model) => model.provider === selectedProvider)
-  }, [selectedProvider, models])
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
@@ -80,6 +63,8 @@ export function Models() {
     )
   }
 
+  const providerOptions = providers
+
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4 text-white md:p-6">
       <ModelFilter
@@ -88,7 +73,7 @@ export function Models() {
         onProviderChange={setSelectedProvider}
       />
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {filteredModels.map((model) => (
+        {data.map((model) => (
           <ModelCard
             key={model.id}
             model={model}
@@ -96,7 +81,7 @@ export function Models() {
           />
         ))}
       </div>
-      {filteredModels.length === 0 && !error && (
+      {data.length === 0 && !error && (
         <div className="rounded-xl border border-white/10 bg-[#181818] px-6 py-10 text-center text-sm text-zinc-400">
           No models found for this provider.
         </div>

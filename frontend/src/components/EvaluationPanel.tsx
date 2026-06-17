@@ -87,7 +87,9 @@ export function ModelEvaluationPanel({
   )
   const range = getRange(filter, dateRange)
   const filteredEvaluations = sortedEvaluations.filter((evaluation) => {
-    const evaluationDate = parseEvaluationDate(evaluation.metadata.start)
+    const evaluationDate = parseEvaluationDate(
+      evaluation.metadata_entry.started_at
+    )
 
     if (Number.isNaN(evaluationDate.getTime())) {
       return true
