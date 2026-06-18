@@ -1,8 +1,5 @@
 import { apiClient } from "@/services/api/client"
-import type { components } from "@/types/schema"
-
-type LLMCreate = components["schemas"]["LLMCreate"]
-type LLMUpdate = components["schemas"]["LLMUpdate"]
+import type { LLMCreate, LLMUpdate } from "@/features/models/schemas/models"
 
 export const modelService = {
   getAllModels: async () => {

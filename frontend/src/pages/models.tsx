@@ -1,12 +1,12 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { ModelCard } from "@/components/ModelCard"
-import { ModelFilter } from "@/components/ModelFilter"
+import { ModelCard } from "@/features/models/components/ModelCard"
+import { ModelFilter } from "@/features/models/components/ModelFilter"
 
 import { providers } from "@/data/providers"
 
-import { modelService } from "@/services/models/user.service"
+import { modelService } from "@/features/models/services/models"
 import { useQuery } from "@tanstack/react-query"
 
 // const getStatsForModel = (model: Model): ModelRunStats => {

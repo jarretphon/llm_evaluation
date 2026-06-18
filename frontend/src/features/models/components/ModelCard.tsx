@@ -1,4 +1,4 @@
-import { Calendar, EllipsisVertical, PencilIcon, TrashIcon } from "lucide-react"
+import { Calendar } from "lucide-react"
 
 import {
   Card,
@@ -7,27 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { CardActionsDropdown } from "@/features/models/components/CardActionsDropdown"
 
-import type { components } from "@/types/schema"
-
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { modelService } from "@/services/models/user.service"
-import { toast } from "sonner"
+import type { LLMRead } from "@/features/models/schemas/models"
 import { useState } from "react"
-import { EditModelModal } from "@/components/AddModelDialog/AddModelDialog"
-
-type Model = components["schemas"]["LLMRead"]
+import { EditModelModal } from "@/features/models/components/EditModelDialog"
 
 type ModelCardProps = {
-  model: Model
+  model: LLMRead
   onSelect: (modelId: string) => void
 }
 
@@ -103,61 +90,5 @@ export function ModelCard({ model, onSelect }: ModelCardProps) {
         model={model}
       />
     </>
-  )
-}
-
-const useDeleteModelMutation = (modelId: string) => {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: () => modelService.deleteModel(modelId),
-    onSuccess: () => {
-      toast.success("Model deleted successfully")
-      queryClient.invalidateQueries({ queryKey: ["models"] })
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete model: ${error.message}`)
-    },
-  })
-}
-
-export function CardActionsDropdown({
-  model,
-  onEdit,
-}: {
-  model: Model
-  onEdit: () => void
-}) {
-  const deleteMutation = useDeleteModelMutation(model.id)
-
-  const handleDelete = () => {
-    deleteMutation.mutate()
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className="inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <EllipsisVertical className="size-5" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent onClick={(event) => event.stopPropagation()}>
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={onEdit}>
-            <PencilIcon />
-            Edit
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-            <TrashIcon />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

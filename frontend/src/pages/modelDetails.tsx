@@ -9,9 +9,8 @@ import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "sonner"
-import { modelService } from "@/services/models/user.service"
 import type { components } from "@/types/schema"
-import { useQuery } from "@tanstack/react-query"
+import { useGetModelById } from "@/features/models/hooks/queries/useModels"
 
 type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
@@ -45,11 +44,7 @@ export function ModelDetails() {
   const [activeEvaluation, setActiveEvaluation] =
     useState<EvaluationRecord | null>(null)
 
-  const { data, isPending, error } = useQuery({
-    queryKey: ["model", modelId],
-    queryFn: () => modelService.getModelById(modelId ?? ""),
-    enabled: !!modelId,
-  })
+  const { data, isPending, error } = useGetModelById({ modelId: modelId ?? "" })
 
   if (isPending) {
     return (
