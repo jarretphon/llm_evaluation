@@ -10,7 +10,7 @@ class LLMRepository:
         self.session = session
 
     def list_llms(self, offset: int = 0, limit: int = 10) -> list[LLMModel]:
-        statement = select(LLMModel).offset(offset).limit(limit)
+        statement = select(LLMModel).order_by(LLMModel.added_at.desc(), LLMModel.id).offset(offset).limit(limit)
         return list(self.session.exec(statement).all())
 
     def get_by_id(self, id: uuid.UUID) -> LLMModel | None:

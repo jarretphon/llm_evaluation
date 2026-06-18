@@ -2,6 +2,7 @@ import { apiClient } from "@/services/api/client"
 import type { components } from "@/types/schema"
 
 type LLMCreate = components["schemas"]["LLMCreate"]
+type LLMUpdate = components["schemas"]["LLMUpdate"]
 
 export const modelService = {
   getAllModels: async () => {
@@ -40,7 +41,7 @@ export const modelService = {
     return data
   },
 
-  editModel: async (id: string, modelData: Partial<LLMCreate>) => {
+  editModel: async (id: string, modelData: LLMUpdate) => {
     const { data, error } = await apiClient.PATCH("/llms/{llm_id}", {
       params: {
         path: { llm_id: id },

@@ -33,10 +33,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import type { components } from "@/types/schema"
 type LLMCreate = components["schemas"]["LLMCreate"]
+type LLMRead = components["schemas"]["LLMRead"]
+type ModelFormValues = z.infer<typeof formSchema>
 
 interface ModalProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const ADD_MODEL_FORM_ID = "add-model-form"
+const ADD_MODEL_DEFAULT_VALUES: ModelFormValues = {
+  endpoint: "",
+  description: "",
+  provider: "Open AI",
 }
 
 export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
@@ -50,13 +59,50 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
             against other models.
           </DialogDescription>
         </DialogHeader>
-        <AddModelForm onSubmitSuccess={() => setIsOpen(false)} />
+        <AddModelForm
+          formId={ADD_MODEL_FORM_ID}
+          onSubmitSuccess={() => setIsOpen(false)}
+        />
         <DialogFooter>
           <DialogClose>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
-          <Button type="submit" form="add-model-form">
+          <Button type="submit" form={ADD_MODEL_FORM_ID}>
             Add Model
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function EditModelModal({
+  isOpen,
+  setIsOpen,
+  model,
+}: ModalProps & { model: LLMRead }) {
+  const formId = `edit-model-form-${model.id}`
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Model</DialogTitle>
+          <DialogDescription>
+            Update the model details used throughout evaluations and reports.
+          </DialogDescription>
+        </DialogHeader>
+        <EditModelForm
+          formId={formId}
+          model={model}
+          onSubmitSuccess={() => setIsOpen(false)}
+        />
+        <DialogFooter>
+          <DialogClose>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button type="submit" form={formId}>
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -67,30 +113,23 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
 const formSchema = z.object({
   endpoint: z.url({ message: "Please enter a valid URL (e.g., https://...)" }),
   description: z.string(),
-  provider: z.string(),
+  provider: z.string().min(1, "Please enter a provider."),
 }) satisfies z.ZodType<LLMCreate>
 
 export function AddModelForm({
+  formId,
   onSubmitSuccess,
 }: {
+  formId: string
   onSubmitSuccess: () => void
 }) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      endpoint: "",
-      description: "",
-      provider: "Open AI",
-    },
-  })
-
+  const [resetKey, setResetKey] = React.useState(0)
   const queryClient = useQueryClient()
-  const { mutate } = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) =>
-      modelService.createModel(data),
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: ModelFormValues) => modelService.createModel(data),
     onSuccess: () => {
       toast.success("Model added successfully!")
-      form.reset()
+      setResetKey((key) => key + 1)
       onSubmitSuccess()
       queryClient.invalidateQueries({ queryKey: ["models"] })
     },
@@ -99,13 +138,92 @@ export function AddModelForm({
     },
   })
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: ModelFormValues) {
+    if (isPending) return
     mutate(data)
   }
 
   return (
-    <form id="add-model-form" onSubmit={form.handleSubmit(onSubmit)}>
-      <fieldset disabled={form.formState.isSubmitting}>
+    <ModelForm
+      key={resetKey}
+      formId={formId}
+      defaultValues={ADD_MODEL_DEFAULT_VALUES}
+      isSubmitting={isPending}
+      onSubmit={onSubmit}
+    />
+  )
+}
+
+export function EditModelForm({
+  formId,
+  model,
+  onSubmitSuccess,
+}: {
+  formId: string
+  model: LLMRead
+  onSubmitSuccess: () => void
+}) {
+  const queryClient = useQueryClient()
+  const defaultValues = React.useMemo<ModelFormValues>(
+    () => ({
+      endpoint: model.endpoint,
+      description: model.description,
+      provider: model.provider,
+    }),
+    [model.description, model.endpoint, model.provider]
+  )
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: ModelFormValues) =>
+      modelService.editModel(model.id, data),
+    onSuccess: () => {
+      toast.success("Model updated successfully!")
+      queryClient.invalidateQueries({ queryKey: ["models"] })
+      onSubmitSuccess()
+    },
+    onError: (error) => {
+      toast.error(`Failed to update model. Please try again. Error: ${error}`)
+    },
+  })
+
+  function onSubmit(data: ModelFormValues) {
+    if (isPending) return
+    mutate(data)
+  }
+
+  return (
+    <ModelForm
+      formId={formId}
+      defaultValues={defaultValues}
+      isSubmitting={isPending}
+      onSubmit={onSubmit}
+    />
+  )
+}
+
+function ModelForm({
+  formId,
+  defaultValues,
+  isSubmitting = false,
+  onSubmit,
+}: {
+  formId: string
+  defaultValues: ModelFormValues
+  isSubmitting?: boolean
+  onSubmit: (data: ModelFormValues) => void
+}) {
+  const form = useForm<ModelFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  })
+
+  React.useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues, form])
+
+  return (
+    <form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
+      <fieldset disabled={form.formState.isSubmitting || isSubmitting}>
         <FieldGroup>
           <Controller
             name="endpoint"
