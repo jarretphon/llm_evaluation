@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/dialog"
 
 import { EditModelForm } from "@/features/models/components/forms/EditModelForm"
-import type { components } from "@/types/schema"
+
+import type { LLMRead } from "@/features/models/schemas/models"
+import { MODEL_TEXT } from "@/features/models/constants/texts"
 
 interface ModalProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  model: components["schemas"]["LLMRead"]
+  model: LLMRead
 }
 
 export function EditModelModal({ isOpen, setIsOpen, model }: ModalProps) {
@@ -27,9 +29,9 @@ export function EditModelModal({ isOpen, setIsOpen, model }: ModalProps) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Model</DialogTitle>
+          <DialogTitle>{MODEL_TEXT.EDIT_MODEL_DIALOG.title}</DialogTitle>
           <DialogDescription>
-            Update the model details used throughout evaluations and reports.
+            {MODEL_TEXT.EDIT_MODEL_DIALOG.description}
           </DialogDescription>
         </DialogHeader>
         <EditModelForm
@@ -39,10 +41,12 @@ export function EditModelModal({ isOpen, setIsOpen, model }: ModalProps) {
         />
         <DialogFooter>
           <DialogClose>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">
+              {MODEL_TEXT.EDIT_MODEL_DIALOG.secondaryActionLabel}
+            </Button>
           </DialogClose>
           <Button type="submit" form={formId}>
-            Save Changes
+            {MODEL_TEXT.EDIT_MODEL_DIALOG.primaryActionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

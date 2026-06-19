@@ -12,6 +12,7 @@ import { CardActionsDropdown } from "@/features/models/components/CardActionsDro
 import type { LLMRead } from "@/features/models/schemas/models"
 import { useState } from "react"
 import { EditModelModal } from "@/features/models/components/EditModelDialog"
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog"
 
 type ModelCardProps = {
   model: LLMRead
@@ -37,6 +38,8 @@ const getProviderBadgeLabel = (provider: string) =>
 
 export function ModelCard({ model, onSelect }: ModelCardProps) {
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState(false)
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+    useState(false)
 
   return (
     <>
@@ -63,8 +66,8 @@ export function ModelCard({ model, onSelect }: ModelCardProps) {
             </div>
             <div>
               <CardActionsDropdown
-                model={model}
                 onEdit={() => setIsEditModelDialogOpen(true)}
+                onDelete={() => setIsDeleteConfirmationOpen(true)}
               />
             </div>
           </div>
@@ -88,6 +91,11 @@ export function ModelCard({ model, onSelect }: ModelCardProps) {
         isOpen={isEditModelDialogOpen}
         setIsOpen={setIsEditModelDialogOpen}
         model={model}
+      />
+      <DeleteConfirmationDialog
+        model={model}
+        isOpen={isDeleteConfirmationOpen}
+        setIsOpen={setIsDeleteConfirmationOpen}
       />
     </>
   )

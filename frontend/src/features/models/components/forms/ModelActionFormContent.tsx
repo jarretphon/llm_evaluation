@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/input-group"
 
 import type { LLMCreate } from "@/features/models/schemas/models"
+import { MODEL_TEXT } from "@/features/models/constants/texts"
 
 const formSchema = z.object({
   endpoint: z.url({ message: "Please enter a valid URL (e.g., https://...)" }),
@@ -57,12 +58,14 @@ export function ModelForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Model Endpoint</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                  {MODEL_TEXT.FORM.endpoint.label}
+                </FieldLabel>
                 <Input
                   {...field}
                   id={field.name}
                   aria-invalid={fieldState.invalid}
-                  placeholder="e.g. https://model-endpoint.com/v1"
+                  placeholder={MODEL_TEXT.FORM.endpoint.placeholder}
                   autoComplete="off"
                 />
                 {fieldState.invalid && (
@@ -76,12 +79,14 @@ export function ModelForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                  {MODEL_TEXT.FORM.description.label}
+                </FieldLabel>
                 <InputGroup>
                   <InputGroupTextarea
                     {...field}
                     id={field.name}
-                    placeholder="A simple text classification model."
+                    placeholder={MODEL_TEXT.FORM.description.placeholder}
                     rows={6}
                     className="min-h-24 resize-none"
                     aria-invalid={fieldState.invalid}
@@ -93,7 +98,7 @@ export function ModelForm({
                   </InputGroupAddon>
                 </InputGroup>
                 <FieldDescription>
-                  Include details about the model endpoint.
+                  {MODEL_TEXT.FORM.description.description}
                 </FieldDescription>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />

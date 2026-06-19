@@ -9,32 +9,13 @@ import {
 
 import { EllipsisVertical, PencilIcon, TrashIcon } from "lucide-react"
 
-import type { LLMRead } from "@/features/models/schemas/models"
-
-import { useDeleteModel } from "@/features/models/hooks/queries/useModels"
-import { toast } from "sonner"
-
 export function CardActionsDropdown({
-  model,
   onEdit,
+  onDelete,
 }: {
-  model: LLMRead
   onEdit: () => void
+  onDelete: () => void
 }) {
-  const { mutate, isPending } = useDeleteModel()
-
-  const handleDelete = () => {
-    if (isPending) return
-    mutate(model.id, {
-      onSuccess: () => {
-        toast.success("Model deleted successfully!")
-      },
-      onError: (error) => {
-        toast.error(`Failed to delete model. Please try again. Error: ${error}`)
-      },
-    })
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -54,7 +35,7 @@ export function CardActionsDropdown({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
             <TrashIcon />
             Delete
           </DropdownMenuItem>

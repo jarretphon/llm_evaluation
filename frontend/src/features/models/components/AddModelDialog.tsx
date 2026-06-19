@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 
 import { AddModelForm } from "@/features/models/components/forms/AddModelForm"
+import { MODEL_TEXT } from "@/features/models/constants/texts"
 
 interface ModalProps {
   isOpen: boolean
@@ -25,10 +26,9 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Model</DialogTitle>
+          <DialogTitle>{MODEL_TEXT.ADD_MODEL_DIALOG.title}</DialogTitle>
           <DialogDescription>
-            Register a new model to the application. Evaluate and compare
-            against other models.
+            {MODEL_TEXT.ADD_MODEL_DIALOG.description}
           </DialogDescription>
         </DialogHeader>
         <AddModelForm
@@ -37,10 +37,12 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
         />
         <DialogFooter>
           <DialogClose>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">
+              {MODEL_TEXT.ADD_MODEL_DIALOG.secondaryActionLabel}
+            </Button>
           </DialogClose>
           <Button type="submit" form={ADD_MODEL_FORM_ID}>
-            Add Model
+            {MODEL_TEXT.ADD_MODEL_DIALOG.primaryActionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
