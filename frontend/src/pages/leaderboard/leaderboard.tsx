@@ -1,5 +1,5 @@
 import { DataTable } from "@/components/data-table"
-import data from "../app/dashboard/data.json"
+import data from "@/data/tableData.json"
 
 export function Leaderboard() {
   return (

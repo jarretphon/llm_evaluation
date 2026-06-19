@@ -7,8 +7,8 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { NewEvalDialog } from "@/components/NewEvalDialog/NewEvalDialog"
-import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
+import { NewEvalDialog } from "@/features/evaluations/components/NewEvalDialog"
+import { CurrentEvalDialog } from "@/features/evaluations/components/CurrentEvalDialog"
 
 import {
   evaluations,

@@ -1,6 +1,6 @@
-import { NewEvalForm } from "@/components/NewEvalDialog/NewEvalForm"
+import { NewEvalForm } from "@/features/evaluations/components/forms/NewEvalForm"
 import { ResponsiveDialog } from "@/components/ResponsiveDialog"
-import { NEW_EVAL_DIALOG_TEXTS } from "@/components/NewEvalDialog/NewEvalDialog.texts"
+import { NEW_EVAL_DIALOG_TEXTS } from "@/features/evaluations/components/NewEvalDialog.texts"
 
 export function NewEvalDialog({
   isOpen,

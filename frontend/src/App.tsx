@@ -3,12 +3,12 @@ import { AppSidebar } from "@/components/Sidebar/Sidebar"
 import { SiteHeader } from "@/components/site-header"
 
 import { Route, Routes } from "react-router-dom"
-import { Dashboard } from "@/pages/dashboard"
-import { Models } from "@/pages/models"
-import { ModelDetails } from "@/pages/modelDetails"
-import { Evaluations } from "@/pages/evaluations"
-import { Compare } from "@/pages/compare"
-import { Leaderboard } from "@/pages/leaderboard"
+import { Dashboard } from "@/pages/dashboard/dashboard"
+import { Models } from "@/pages/models/models"
+import { ModelDetails } from "@/pages/modelDetails/modelDetails"
+import { Evaluations } from "@/pages/evaluations/evaluations"
+import { Compare } from "@/pages/compare/compare"
+import { Leaderboard } from "@/pages/leaderboard/leaderboard"
 import { Toaster } from "@/components/ui/sonner"
 
 export function App() {

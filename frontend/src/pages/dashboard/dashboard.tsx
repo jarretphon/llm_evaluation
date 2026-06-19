@@ -1,9 +1,9 @@
-import { SectionCards } from "@/components/section-cards"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
+import { SectionCards } from "@/features/dashboard/components/section-cards"
+import { ChartAreaInteractive } from "@/features/dashboard/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
-import { RecentActivityTable } from "@/components/RecentActivity/RecentActivity"
+import { RecentActivityTable } from "@/features/dashboard/components/RecentActivity"
 
-import data from "../app/dashboard/data.json"
+import data from "@/data/tableData.json"
 
 export function Dashboard() {
   return (

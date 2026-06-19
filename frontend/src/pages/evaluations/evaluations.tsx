@@ -1,4 +1,4 @@
-import { EvaluationTable } from "@/components/evaluation-table"
+import { EvaluationTable } from "@/features/evaluations/components/evaluation-table"
 
 export function Evaluations() {
   return (

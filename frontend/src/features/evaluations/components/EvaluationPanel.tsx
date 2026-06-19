@@ -13,8 +13,11 @@ import {
 
 // import type { EvaluationRecord } from "@/data/evaluations"
 // import type { Model } from "@/data/models"
-import { EvaluationCard } from "@/components/EvaluationCard"
-import { type dateFilter, TimeRangeFilter } from "@/components/TimeRangeFilter"
+import { EvaluationCard } from "@/features/evaluations/components/EvaluationCard"
+import {
+  type dateFilter,
+  TimeRangeFilter,
+} from "@/features/evaluations/components/TimeRangeFilter"
 import { sortEvaluationsBy } from "@/utils/helpers"
 import type { components } from "@/types/schema"
 

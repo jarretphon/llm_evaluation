@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 
-import { ModelMultiSelect } from "@/components/ModelMultiSelect"
-import { EvaluationChart } from "@/components/EvaluationChart"
+import { ModelMultiSelect } from "@/features/compare/components/ModelMultiSelect"
+import { EvaluationChart } from "@/features/compare/components/EvaluationChart"
 import { benchmarkCategories } from "@/data/benchmark-categories"
 import { models } from "@/data/models"
 

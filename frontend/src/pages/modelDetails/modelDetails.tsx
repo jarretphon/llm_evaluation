@@ -2,9 +2,9 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { ArrowLeft, CirclePlay } from "lucide-react"
 
-import { CurrentEvalDialog } from "@/components/CurrentEvalDialog/CurrentEvalDialog"
-import { NewEvalDialog } from "@/components/NewEvalDialog/NewEvalDialog"
-import { ModelEvaluationPanel } from "@/components/EvaluationPanel"
+import { CurrentEvalDialog } from "@/features/evaluations/components/CurrentEvalDialog"
+import { NewEvalDialog } from "@/features/evaluations/components/NewEvalDialog"
+import { ModelEvaluationPanel } from "@/features/evaluations/components/EvaluationPanel"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
