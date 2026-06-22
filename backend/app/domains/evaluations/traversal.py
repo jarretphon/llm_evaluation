@@ -10,51 +10,6 @@ from lm_eval.tasks._index import Entry, Kind
 TaskTree: TypeAlias = dict[str, "TaskTree | str"]
 
 
-def build_task_tree(
-    task_manager: TaskManager | None = None,
-    roots: Iterable[str] | None = None,
-    *,
-    include_tags: bool = True,
-    include_standalone: bool = True,
-) -> TaskTree:
-    """Build a nested task tree from TaskManager.task_index without loading tasks.
-
-    Groups and tags become dictionary keys whose values are nested task trees.
-    Leaf tasks are represented as ``{"task_name": "task_name"}``.
-
-    Tags are included by default because lm-eval uses tags as benchmark
-    collections in several places, for example ``gpqa`` and ``mmlu_stem_tasks``.
-    """
-
-    manager = task_manager or TaskManager()
-    root_names = list(
-        roots
-        if roots is not None
-        else _default_roots(
-            manager,
-            include_tags=include_tags,
-            include_standalone=include_standalone,
-        )
-    )
-
-    tree: TaskTree = {}
-    for name in root_names:
-        tree.update(build_task_node(name, manager))
-
-    return tree
-
-
-def build_task_node(
-    name: str,
-    task_manager: TaskManager | None = None,
-    *,
-    include_tags: bool = True,
-) -> TaskTree:
-    """Build the tree rooted at one task, group, or tag name."""
-
-    manager = task_manager or TaskManager()
-    return _node_from_name(name, manager, include_tags=include_tags, seen=set())
-
 
 def build_complete_task_tree(
     task_manager: TaskManager | None = None,
@@ -83,13 +38,6 @@ def build_complete_task_tree(
     return tree
 
 
-def build_all_subtasks_tree(task_manager: TaskManager | None = None) -> TaskTree:
-    """Build a flat tree containing every leaf task from TaskManager.all_subtasks."""
-
-    manager = task_manager or TaskManager()
-    return {task_name: task_name for task_name in manager.all_subtasks}
-
-
 def get_standalone_tasks(
     task_manager: TaskManager | None = None,
     *,
@@ -110,6 +58,17 @@ def get_standalone_tasks(
 
     return sorted(set(manager.all_subtasks) - claimed_tasks)
 
+def build_task_node(
+    name: str,
+    task_manager: TaskManager | None = None,
+    *,
+    include_tags: bool = True,
+) -> TaskTree:
+    """Build the tree rooted at one task, group, or tag name."""
+
+    manager = task_manager or TaskManager()
+    return _node_from_name(name, manager, include_tags=include_tags, seen=set())
+
 
 def _build_explicit_group_tree(
     task_manager: TaskManager,
@@ -117,7 +76,7 @@ def _build_explicit_group_tree(
     include_tags: bool,
 ) -> TaskTree:
     tree: TaskTree = {}
-    for group_name in _root_group_names(task_manager):
+    for group_name in get_root_groups(task_manager):
         group_node = build_task_node(
             group_name, task_manager, include_tags=include_tags
         )
@@ -136,23 +95,71 @@ def _build_explicit_group_tree(
     return tree
 
 
-def _root_group_names(task_manager: TaskManager) -> list[str]:
+def get_root_groups(task_manager: TaskManager) -> list[str]:
+    """Gets the highest-level groups in the repository, i.e. those that are not referenced by any other group."""
     referenced_groups: set[str] = set()
 
-    for group_name in task_manager.all_groups:
-        entry = task_manager.task_index[group_name]
-        group_root = _entry_repository_root(entry)
-        for child_name in _referenced_names_from_task_field(_task_field(entry)):
-            child_entry = task_manager.task_index.get(child_name)
-            if (
-                child_entry
-                and child_entry.kind == Kind.GROUP
-                and _entry_repository_root(child_entry) == group_root
-            ):
-                referenced_groups.add(child_name)
+    for group in task_manager.all_groups:
+        entry = task_manager.task_index[group]
+        group_root = get_group_root(entry)
+
+        for subtask in flatten(get_tasks(entry)):
+            child_entry = task_manager.task_index.get(subtask)
+            is_refrenced = child_entry and child_entry.kind == Kind.GROUP and get_group_root(child_entry) == group_root
+
+            if is_refrenced:
+                referenced_groups.add(subtask)
 
     return sorted(set(task_manager.all_groups) - referenced_groups)
 
+
+def get_group_root(entry: Entry) -> str | None:
+    """Parses yaml path to find the root group name for an entry. The root group is the first directory under the `tasks` directory in the lm_eval repository."""
+    if not entry.yaml_path:
+        return None
+
+    rel_parts = _relative_task_path_parts(entry.yaml_path)
+    if not rel_parts:
+        return None
+
+    return rel_parts[0]
+
+
+def get_tasks(entry: Entry) -> Any:
+    if not entry.cfg:
+        return []
+    return entry.cfg.get("task", [])
+
+
+def flatten(task_field: Any) -> set[str]:
+    if not task_field:
+        return set()
+
+    if isinstance(task_field, str):
+        return {task_field}
+
+    if isinstance(task_field, dict):
+        names: set[str] = set()
+        group_name = task_field.get("group")
+        task_name = task_field.get("task")
+
+        if isinstance(group_name, str):
+            names.add(group_name)
+
+        if isinstance(task_name, str):
+            names.add(task_name)
+        else:
+            names.update(flatten(task_name))
+
+        return names
+
+    if isinstance(task_field, list):
+        names: set[str] = set()
+        for item in task_field:
+            names.update(flatten(item))
+        return names
+
+    return set()
 
 def _insert_group_at_repository_path(
     tree: TaskTree,
@@ -190,17 +197,6 @@ def _repository_group_path_parts(
         return [group_name]
 
     return rel_parts
-
-
-def _entry_repository_root(entry: Entry) -> str | None:
-    if not entry.yaml_path:
-        return None
-
-    rel_parts = _relative_task_path_parts(entry.yaml_path)
-    if not rel_parts:
-        return None
-
-    return rel_parts[0]
 
 
 def _tasks_missing_from_repository_roots(
@@ -246,54 +242,6 @@ def _merge_tree(target: TaskTree, source: TaskTree) -> None:
             target[key] = value
 
 
-def _referenced_names_from_task_field(task_field: Any) -> set[str]:
-    if not task_field:
-        return set()
-
-    if isinstance(task_field, str):
-        return {task_field}
-
-    if isinstance(task_field, dict):
-        names: set[str] = set()
-        group_name = task_field.get("group")
-        task_name = task_field.get("task")
-
-        if isinstance(group_name, str):
-            names.add(group_name)
-
-        if isinstance(task_name, str):
-            names.add(task_name)
-        else:
-            names.update(_referenced_names_from_task_field(task_name))
-
-        return names
-
-    if isinstance(task_field, list):
-        names: set[str] = set()
-        for item in task_field:
-            names.update(_referenced_names_from_task_field(item))
-        return names
-
-    return set()
-
-
-def _default_roots(
-    task_manager: TaskManager,
-    *,
-    include_tags: bool,
-    include_standalone: bool,
-) -> list[str]:
-    roots = list(task_manager.all_groups)
-
-    if include_tags:
-        roots.extend(task_manager.all_tags)
-
-    if include_standalone:
-        roots.extend(get_standalone_tasks(task_manager, include_tags=include_tags))
-
-    return sorted(dict.fromkeys(roots))
-
-
 def _node_from_name(
     name: str,
     task_manager: TaskManager,
@@ -314,7 +262,7 @@ def _node_from_name(
     if entry.kind == Kind.GROUP:
         return {
             name: _children_from_task_field(
-                _task_field(entry),
+                get_tasks(entry),
                 task_manager,
                 include_tags=include_tags,
                 seen=next_seen,
@@ -454,7 +402,7 @@ def _leaf_task_names(
 
     if entry.kind == Kind.GROUP:
         return _leaf_names_from_task_field(
-            _task_field(entry),
+            get_tasks(entry),
             task_manager,
             include_tags=include_tags,
             seen=next_seen,
@@ -622,10 +570,11 @@ def _is_leaf(entry: Entry) -> bool:
     return entry.kind in {Kind.TASK, Kind.PY_TASK}
 
 
-def _task_field(entry: Entry) -> Any:
-    if not entry.cfg:
-        return []
-    return entry.cfg.get("task", [])
 
+# with open("task_tree2.json", "w") as f:
+#     import json
+#     json.dump(build_complete_task_tree(), f, indent=2)
 
-print(len(build_complete_task_tree()))
+# print(len(build_complete_task_tree()))
+
+print(len(get_root_groups(TaskManager())))
