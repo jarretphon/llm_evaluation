@@ -116,16 +116,7 @@ def get_root_groups(task_manager: TaskManager) -> list[str]:
 
     highest_level_groups = sorted(set(task_manager.all_groups) - referenced_groups)
 
-    root_groups = {}
-    for group in highest_level_groups:
-        root_name = get_group_root(task_manager.task_index[group])
-
-        if root_name in root_groups:
-            root_groups[root_name].append(group)
-        else:
-            root_groups[root_name] = [group]
-
-    return root_groups
+    return highest_level_groups
 
 
 def get_group_root(entry: Entry) -> str | None:
@@ -147,32 +138,34 @@ def get_tasks(entry: Entry) -> Any:
 
 
 def flatten(task_field: Any) -> set[str]:
-    """Extremely fast, non-recursive loop-based flattener for task fields."""
     if not task_field:
         return set()
 
-    names: set[str] = set()
-    queue = [task_field]
+    if isinstance(task_field, str):
+        return {task_field}
 
-    while queue:
-        current = queue.pop()
-        if isinstance(current, str):
-            names.add(current)
+    if isinstance(task_field, dict):
+        names: set[str] = set()
+        group_name = task_field.get("group")
+        task_name = task_field.get("task")
 
-        elif isinstance(current, list):
-            queue.extend(current)
+        if isinstance(group_name, str):
+            names.add(group_name)
 
-        elif isinstance(current, dict):
-            g_name = current.get("group")
-            t_name = current.get("task")
+        if isinstance(task_name, str):
+            names.add(task_name)
+        else:
+            names.update(flatten(task_name))
 
-            if isinstance(g_name, str):
-                names.add(g_name)
+        return names
 
-            if t_name:
-                queue.append(t_name)
+    if isinstance(task_field, list):
+        names: set[str] = set()
+        for item in task_field:
+            names.update(flatten(item))
+        return names
 
-    return names
+    return set()
 
 
 def _insert_group_at_repository_path(
@@ -590,6 +583,5 @@ def _is_leaf(entry: Entry) -> bool:
 
 # print(len(build_complete_task_tree()))
 
-o1 = get_root_groups(TaskManager())
-print(o1)
+print(get_root_groups(TaskManager()))
 print(len(get_root_groups(TaskManager())))
