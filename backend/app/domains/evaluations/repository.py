@@ -1,7 +1,6 @@
 import uuid
 
 from app.domains.evaluations.models import EvaluationModel
-from app.domains.llms.models import LLMModel
 from sqlmodel import Session, select
 
 

@@ -10,6 +10,11 @@ from app.domains.llms.errors import LLMNotFoundError
 router = APIRouter()
 
 
+@router.get("/benchmarks")
+def get_benchmark_options(service: EvaluationServiceDep) -> dict[str, list[str]]:
+    return service.list_benchmark_options()
+
+
 @router.get("")
 def get_all_evaluations(
     evaluation_service: EvaluationServiceDep, offset: int = 0, limit: int = 10

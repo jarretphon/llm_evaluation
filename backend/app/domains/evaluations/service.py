@@ -11,12 +11,18 @@ from app.domains.evaluations.models import (
 )
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.schemas import EvaluationCreate
+from app.domains.evaluations.traversal import get_root_groups
 from app.domains.evaluations.utils import require_completions
+from lm_eval.tasks import TaskManager
 
 
 class EvaluationService:
     def __init__(self, repository: EvaluationRepository) -> None:
         self.repository = repository
+        self.task_manager = TaskManager()
+
+    def list_benchmark_options(self) -> dict[str, list[str]]:
+        return get_root_groups(self.task_manager)
 
     def list_evaluations(
         self, offset: int = 0, limit: int = 10

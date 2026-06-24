@@ -15,7 +15,7 @@ import { ButtonGroup } from "@/components/ui/button-group"
 import { SearchBar } from "@/features/evaluations/components/SearchBar"
 import { Separator } from "@/components/ui/separator"
 
-type FileTreeItem = { name: string; subgroups: string[] }
+import { useGetBenchmarkOptions } from "@/features/evaluations/hooks/queries/useEvaluations"
 
 export function NewEvalDialog({
   isOpen,
@@ -27,54 +27,35 @@ export function NewEvalDialog({
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
-  const benchmarks: FileTreeItem[] = [
-    {
-      name: "mmlu",
-      subgroups: ["mmlu_stem", "mmlu_social_sciences", "mmlu_humanities"],
-    },
-    {
-      name: "afrimgsm",
-      subgroups: [
-        "afrimgsm-irokobench",
-        "afrimgsm-cot-irokobench",
-        "afrimgsm-irokobench-translation",
-      ],
-    },
-    {
-      name: "gsm8k",
-      subgroups: [
-        "use-media-query.ts",
-        "use-debounce.ts",
-        "use-local-storage.ts",
-      ],
-    },
-    {
-      name: "zhomblip",
-      subgroups: ["zhomblip-test1", "zhomblip-test2", "zhomblip-test3"],
-    },
-    {
-      name: "public",
-      subgroups: ["favicon.ico", "logo.svg", "images"],
-    },
-  ]
+  const { data, isPending, error } = useGetBenchmarkOptions()
+
+  const benchmarks = useMemo(() => Object.entries(data || {}), [data])
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return benchmarks
     return benchmarks.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        b.subgroups.some((g) => g.toLowerCase().includes(q))
+      ([name, subgroups]) =>
+        name.toLowerCase().includes(q) ||
+        subgroups.some((group) => group.toLowerCase().includes(q))
     )
-  }, [searchQuery])
+  }, [benchmarks, searchQuery])
+
+  if (isPending) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>
+  }
 
   const selectAll = () => {
     const next = new Set<string>()
-    benchmarks.forEach((b) => {
-      if (b.subgroups.length === 0) {
-        next.add(b.name)
+    benchmarks.forEach(([name, subgroups]) => {
+      if (subgroups.length === 0) {
+        next.add(name)
       } else {
-        b.subgroups.forEach((g) => next.add(g))
+        subgroups.forEach((g) => next.add(g))
       }
     })
     setSelectedItems(next)

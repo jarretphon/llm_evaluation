@@ -95,7 +95,7 @@ def _build_explicit_group_tree(
     return tree
 
 
-def get_root_groups(task_manager: TaskManager) -> list[str]:
+def get_root_groups(task_manager: TaskManager) -> dict[str, list[str]]:
     """Gets the highest-level groups in the repository, i.e. those that are not referenced by any other group."""
     referenced_groups: set[str] = set()
 
@@ -589,7 +589,3 @@ def _is_leaf(entry: Entry) -> bool:
 #     json.dump(build_complete_task_tree(), f, indent=2)
 
 # print(len(build_complete_task_tree()))
-
-o1 = get_root_groups(TaskManager())
-print(o1)
-print(len(get_root_groups(TaskManager())))
