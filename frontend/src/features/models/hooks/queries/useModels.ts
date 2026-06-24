@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { modelService } from "@/features/models/services/models"
 import type { LLMCreate } from "@/features/models/schemas/models"
+import type { components } from "@/types/schema"
+
+type Model = components["schemas"]["LLMRead"]
+
+const hasIncompleteEvaluation = (model: Model | undefined) => {
+  return model?.evaluations.some((evaluation) => {
+    const progress = evaluation.metadata_entry.progress ?? 0
+    const status = evaluation.metadata_entry.evaluation_status
+
+    return progress < 100 && (status === "queued" || status === "running")
+  })
+}
 
 export function useGetModels() {
   return useQuery({
@@ -14,6 +26,8 @@ export function useGetModelById({ modelId }: { modelId: string }) {
     queryKey: ["model", modelId],
     queryFn: () => modelService.getModelById(modelId),
     enabled: !!modelId,
+    refetchInterval: (query) =>
+      hasIncompleteEvaluation(query.state.data) ? 1500 : false,
   })
 }
 

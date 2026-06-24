@@ -12,7 +12,7 @@ from app.domains.evaluations.models import (
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.schemas import EvaluationCreate
 from app.domains.evaluations.traversal import get_root_groups
-from app.domains.evaluations.utils import require_completions
+from app.domains.evaluations.utils import get_group_tasks, require_completions
 from lm_eval.tasks import TaskManager
 
 
@@ -37,15 +37,15 @@ class EvaluationService:
 
         return evaluation
 
-    def create_evaluation(
-        self, llm_id: uuid.UUID, evaluation_create: EvaluationCreate
-    ) -> EvaluationModel:
+    def create_evaluation(self, evaluation_create: EvaluationCreate) -> EvaluationModel:
+        benchmark_names = self.get_subtasks(evaluation_create.benchmarks)
+
         evaluation = EvaluationModel(
-            llm_id=llm_id,
+            llm_id=evaluation_create.model_id,
             metadata_entry=EvaluationMetadata(),
             benchmarks=[
-                BenchmarkModel(name=benchmark.name, description=benchmark.description)
-                for benchmark in evaluation_create.benchmarks
+                BenchmarkModel(name=benchmark_name)
+                for benchmark_name in benchmark_names
             ],
         )
 
@@ -57,11 +57,13 @@ class EvaluationService:
     ) -> EvaluationModel:
 
         self._set_status(evaluation, EvaluationStatus.RUNNING)
+        self.repository.save_evaluation(evaluation)
         total_benchmarks = len(evaluation.benchmarks)
         num_benchmarks_evaluated = 0
 
         for benchmark in evaluation.benchmarks:
             self._set_status(benchmark, EvaluationStatus.RUNNING)
+            self.repository.save_evaluation(evaluation)
             try:
                 eval_results = self._run_lm_eval(
                     base_url=evaluation_create.model_endpoint,
@@ -75,7 +77,10 @@ class EvaluationService:
                 self._set_status(benchmark, EvaluationStatus.FAILED)
             else:
                 self._set_status(benchmark, EvaluationStatus.COMPLETED)
-                self._update_benchmark_results(eval_results.get("results", {}))
+                benchmark.score = self._extract_benchmark_score(
+                    eval_results.get("results", {}),
+                    benchmark.name,
+                )
 
             num_benchmarks_evaluated += 1
             self._update_evaluation_progress(
@@ -83,6 +88,7 @@ class EvaluationService:
             )
 
         self._set_status(evaluation, EvaluationStatus.COMPLETED)
+        self.repository.save_evaluation(evaluation)
 
         return evaluation
 
@@ -111,10 +117,16 @@ class EvaluationService:
         self, model: EvaluationModel | BenchmarkModel, status: EvaluationStatus
     ) -> None:
         model.status = status
+        if isinstance(model, EvaluationModel):
+            model.metadata_entry.evaluation_status = status
 
-    def _update_benchmark_results(
-        self, benchmark_result: dict[str, Any]
+    def _extract_benchmark_score(
+        self,
+        evaluation_results: dict[str, Any],
+        benchmark_name: str,
     ) -> float | None:
+        benchmark_result = evaluation_results.get(benchmark_name, evaluation_results)
+
         for metric_name, value in benchmark_result.items():
             if metric_name.endswith("_stderr"):
                 continue
@@ -133,3 +145,9 @@ class EvaluationService:
         else:
             evaluation.metadata_entry.progress = (num_evaluated / total_tasks) * 100
         self.repository.save_evaluation(evaluation)
+
+    def get_subtasks(self, groups: list[str]) -> list[str]:
+        subtasks = []
+        for group_name in groups:
+            subtasks.extend(get_group_tasks(group_name, self.task_manager))
+        return subtasks

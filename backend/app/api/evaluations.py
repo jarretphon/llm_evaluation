@@ -34,13 +34,12 @@ def get_evaluation(
 
 @router.post("")
 def create_evaluation(
-    llm_id: uuid.UUID,
     evaluation_create: EvaluationCreate,
     service: EvaluationServiceDep,
     background_tasks: BackgroundTasks,
 ) -> EvaluationRead:
     try:
-        evaluation = service.create_evaluation(llm_id, evaluation_create)
+        evaluation = service.create_evaluation(evaluation_create)
     except LLMNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

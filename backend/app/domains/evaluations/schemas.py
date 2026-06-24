@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 class BenchmarkBase(BaseModel):
     name: str
-    description: str
 
 
 class BenchmarkCreate(BenchmarkBase):
@@ -15,6 +14,7 @@ class BenchmarkCreate(BenchmarkBase):
 
 class BenchmarkRead(BenchmarkBase):
     id: uuid.UUID
+    description: str
     status: str
     progress: float | None = None
     score: float | None = None
@@ -34,9 +34,10 @@ class EvaluationBase(BaseModel):
 
 
 class EvaluationCreate(EvaluationBase):
+    model_id: uuid.UUID
     model_endpoint: str
     model_name: str = "occaecat"
-    benchmarks: list[BenchmarkCreate]
+    benchmarks: list[str]
 
 
 class EvaluationRead(EvaluationBase):

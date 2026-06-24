@@ -16,13 +16,20 @@ import { SearchBar } from "@/features/evaluations/components/SearchBar"
 import { Separator } from "@/components/ui/separator"
 
 import { useGetBenchmarkOptions } from "@/features/evaluations/hooks/queries/useEvaluations"
+import type { components } from "@/types/schema"
+
+type Model = components["schemas"]["LLMRead"]
+
+const NEW_EVALUATION_FORM_ID = "new-evaluation-form"
 
 export function NewEvalDialog({
   isOpen,
   setIsOpen,
+  model,
 }: {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+  model?: Model
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
@@ -92,11 +99,23 @@ export function NewEvalDialog({
 
           <Separator />
 
-          <NewEvaluationForm
-            benchmarks={filtered}
-            selectedItems={selectedItems}
-            setSelectedItems={setSelectedItems}
-          />
+          {model ? (
+            <NewEvaluationForm
+              formId={NEW_EVALUATION_FORM_ID}
+              model={model}
+              benchmarks={filtered}
+              selectedItems={selectedItems}
+              setSelectedItems={setSelectedItems}
+              onSubmitSuccess={() => {
+                setSelectedItems(new Set<string>())
+                setIsOpen(false)
+              }}
+            />
+          ) : (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              Select a model before starting an evaluation.
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -105,7 +124,9 @@ export function NewEvalDialog({
               Cancel
             </Button>
           </DialogClose>
-          <Button onClick={() => setIsOpen(false)}>Start Evaluation</Button>
+          <Button type="submit" form={NEW_EVALUATION_FORM_ID} disabled={!model}>
+            Start Evaluation
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

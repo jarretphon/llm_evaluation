@@ -7,8 +7,9 @@ type EvaluationRecord = components["schemas"]["EvaluationRead"]
 const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
   const progress = record.metadata_entry.progress ?? 0
   const type = record.metadata_entry.evaluation_status
+  const shouldShowProgress = type === "running" || progress < 100
 
-  return type === "running" ? (
+  return shouldShowProgress ? (
     <div className="flex w-full min-w-50 flex-col gap-2 sm:flex-1 lg:max-w-90">
       <div className="w-full">
         <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">

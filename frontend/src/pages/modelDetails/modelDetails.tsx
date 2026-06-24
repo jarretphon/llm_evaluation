@@ -100,7 +100,11 @@ export function ModelDetails() {
         }}
       />
 
-      <NewEvalDialog isOpen={isNewEvalOpen} setIsOpen={setIsNewEvalOpen} />
+      <NewEvalDialog
+        isOpen={isNewEvalOpen}
+        setIsOpen={setIsNewEvalOpen}
+        model={data}
+      />
       <CurrentEvalDialog
         isOpen={isDetailsOpen}
         setIsOpen={setIsDetailsOpen}

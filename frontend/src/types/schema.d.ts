@@ -149,24 +149,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** BenchmarkCreate */
-        BenchmarkCreate: {
-            /** Name */
-            name: string;
-            /** Description */
-            description: string;
-        };
         /** BenchmarkRead */
         BenchmarkRead: {
             /** Name */
             name: string;
-            /** Description */
-            description: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Description */
+            description: string;
             /** Status */
             status: string;
             /** Progress */
@@ -177,7 +170,12 @@ export interface components {
         /** EvaluationCreate */
         EvaluationCreate: {
             /** Benchmarks */
-            benchmarks: components["schemas"]["BenchmarkCreate"][];
+            benchmarks: string[];
+            /**
+             * Model Id
+             * Format: uuid
+             */
+            model_id: string;
             /** Model Endpoint */
             model_endpoint: string;
             /**
@@ -609,9 +607,7 @@ export interface operations {
     };
     create_evaluation_evaluations_post: {
         parameters: {
-            query: {
-                llm_id: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;

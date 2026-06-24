@@ -50,7 +50,7 @@ class BenchmarkModel(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     evaluation_id: uuid.UUID = Field(foreign_key="evaluations.id", ondelete="CASCADE")
     name: str
-    description: str
+    description: str = Field(default="")
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
     # progress: float = Field(default=0.0)
     score: Optional[float] = Field(default=None)
