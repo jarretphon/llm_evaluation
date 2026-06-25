@@ -6,7 +6,6 @@ import { EvalProgress } from "@/features/evaluations/components/EvalProgress"
 import {
   BenchmarkTable,
   type BenchmarkTableBenchmark,
-  type BenchmarkTableEvaluation,
 } from "./BenchmarkTable"
 import { EvalDurationStats } from "./EvalDurationStats"
 import { ResponsiveDialog } from "@/components/ResponsiveDialog"
@@ -55,46 +54,52 @@ const formatDuration = (duration: number) => {
   return `${Math.round(duration / 60)} min`
 }
 
-const mockActiveEvaluation: EvaluationRead = {
-  benchmarks: [
-    {
-      name: "hello",
-      id: "aadsfa",
-      description: "hello",
-      status: "running",
-      results: {
-        accuracy: "0.8",
-        "accuracy,stderr": "0.1",
-      },
-    },
-    {
-      name: "another metric",
-      id: "agaghs",
-      description: "hello",
-      status: "running",
-      results: {
-        accuracy: "0.8",
-        "accuracy,stderr": "0.1",
-        mse: "0.2",
-        "mse,stderr": "0.1",
-        f1_score: "0.9",
-        "f1_score,stderr": "0.05",
-        precision: "0.85",
-        "precision,stderr": "0.03",
-        recall: "0.88",
-        "recall,stderr": "0.04",
-      },
-    },
-  ],
-  id: "asdfadsf",
-  metadata_entry: {
-    started_at: "sdafsdafdsaf",
-    duration: 100,
-    evaluation_status: "running",
-    completed_at: "adfads",
-    estimated_end_time: "asdfafd",
-  },
+const terminalStatuses = new Set(["completed", "failed", "partial_failed"])
+
+const formatStatus = (status: string) => {
+  return status.replaceAll("_", " ")
 }
+
+// const mockActiveEvaluation: EvaluationRead = {
+//   benchmarks: [
+//     {
+//       name: "hello",
+//       id: "aadsfa",
+//       description: "hello",
+//       status: "running",
+//       results: {
+//         accuracy: "0.8",
+//         "accuracy,stderr": "0.1",
+//       },
+//     },
+//     {
+//       name: "another metric",
+//       id: "agaghs",
+//       description: "hello",
+//       status: "running",
+//       results: {
+//         accuracy: "0.8",
+//         "accuracy,stderr": "0.1",
+//         mse: "0.2",
+//         "mse,stderr": "0.1",
+//         f1_score: "0.9",
+//         "f1_score,stderr": "0.05",
+//         precision: "0.85",
+//         "precision,stderr": "0.03",
+//         recall: "0.88",
+//         "recall,stderr": "0.04",
+//       },
+//     },
+//   ],
+//   id: "asdfadsf",
+//   metadata_entry: {
+//     started_at: "sdafsdafdsaf",
+//     duration: 100,
+//     evaluation_status: "running",
+//     completed_at: "adfads",
+//     estimated_end_time: "asdfafd",
+//   },
+// }
 
 export function CurrentEvalDialog({
   isOpen,
@@ -118,13 +123,23 @@ export function CurrentEvalDialog({
     const metadata = activeEvaluation.metadata_entry
     const progress = metadata.progress ?? 0
     const status = metadata.evaluation_status
-    const isIncomplete = status === "running" || progress < 100
+    const isTerminalStatus = terminalStatuses.has(status)
+    const isIncomplete = !isTerminalStatus && progress < 100
     const title = model?.endpoint ?? activeEvaluation.id
-    const timelineRows = [
-      { label: "Started", value: formatDateTime(metadata.started_at) },
-      { label: "Completed", value: formatDateTime(metadata.completed_at) },
-      { label: "Duration", value: formatDuration(metadata.duration) },
-    ]
+    const timelineRows = isTerminalStatus
+      ? [
+          { label: "Started", value: formatDateTime(metadata.started_at) },
+          { label: "Completed", value: formatDateTime(metadata.completed_at) },
+          { label: "Duration", value: formatDuration(metadata.duration) },
+        ]
+      : [
+          { label: "Started", value: formatDateTime(metadata.started_at) },
+          { label: "Duration", value: formatDuration(metadata.duration) },
+          {
+            label: "Estimated End",
+            value: formatDateTime(metadata.estimated_end_time),
+          },
+        ]
 
     return (
       <div className="flex w-full min-w-0 flex-col gap-4 overflow-hidden">
@@ -132,13 +147,15 @@ export function CurrentEvalDialog({
           <h2 className="min-w-0 truncate text-xl font-semibold tracking-tight">
             {title}
           </h2>
-          <Badge className="ml-auto w-fit px-2.5 capitalize">{status}</Badge>
+          <Badge className="ml-auto w-fit px-2.5 capitalize">
+            {formatStatus(status)}
+          </Badge>
         </div>
 
         <EvalDurationStats data={timelineRows} />
         {isIncomplete && <EvalProgress evaluation={activeEvaluation} />}
         <BenchmarkTable
-          evaluation={mockActiveEvaluation}
+          evaluation={activeEvaluation}
           onRetryBenchmark={onRetryBenchmark}
         />
       </div>

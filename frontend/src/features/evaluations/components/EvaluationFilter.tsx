@@ -9,6 +9,7 @@ const filters: Array<{ value: FilterOption; label: string }> = [
   { value: "running", label: "Running" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
+  { value: "partial_failed", label: "Partial Failed" },
   { value: "queued", label: "Queued" },
 ]
 

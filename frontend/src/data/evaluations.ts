@@ -1,7 +1,12 @@
 import { benchmarks, type BenchmarkRecord } from "./benchmarks"
 import { type Model, models } from "./models"
 
-export type EvaluationStatus = "running" | "completed" | "failed" | "queued"
+export type EvaluationStatus =
+  | "running"
+  | "completed"
+  | "failed"
+  | "partial_failed"
+  | "queued"
 
 interface EvalMetadata {
   start: string

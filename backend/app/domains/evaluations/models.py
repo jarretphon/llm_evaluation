@@ -3,13 +3,19 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Optional
 
+from sqlalchemy import DateTime
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 class EvaluationStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    PARTIAL_FAILED = "partial_failed"
     QUEUED = "queued"
 
 
@@ -34,10 +40,19 @@ class EvaluationModel(SQLModel, table=True):
 class EvaluationMetadata(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, unique=True)
     evaluation_id: uuid.UUID = Field(foreign_key="evaluations.id")
-    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    started_at: datetime = Field(
+        default_factory=utc_now,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
     duration: float = Field(default=0.0)
-    completed_at: Optional[datetime] = Field(default=None)
-    estimated_end_time: Optional[datetime] = Field(default=None)
+    completed_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    estimated_end_time: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
     progress: float = Field(default=0.0)
     evaluation_status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
 

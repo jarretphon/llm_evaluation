@@ -11,7 +11,12 @@ import { useGetEvaluations } from "@/features/evaluations/hooks/queries/useEvalu
 import type { EvaluationRead } from "@/features/evaluations/schemas/evaluations"
 import { EvaluationCard } from "./EvaluationCard"
 
-type EvaluationStatus = "running" | "completed" | "failed" | "queued"
+type EvaluationStatus =
+  | "running"
+  | "completed"
+  | "failed"
+  | "partial_failed"
+  | "queued"
 type FilterOption = EvaluationStatus | "all"
 
 const filters: Array<{ value: FilterOption; label: string }> = [
@@ -19,6 +24,7 @@ const filters: Array<{ value: FilterOption; label: string }> = [
   { value: "running", label: "Running" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
+  { value: "partial_failed", label: "Partial Failed" },
   { value: "queued", label: "Queued" },
 ]
 
@@ -27,6 +33,7 @@ const initialCounts: Record<FilterOption, number> = {
   running: 0,
   completed: 0,
   failed: 0,
+  partial_failed: 0,
   queued: 0,
 }
 

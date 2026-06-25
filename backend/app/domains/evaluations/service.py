@@ -1,5 +1,5 @@
 import uuid
-from typing import Any
+from datetime import UTC, datetime
 
 import lm_eval
 from app.domains.evaluations.errors import EvaluationNotFoundError
@@ -8,6 +8,7 @@ from app.domains.evaluations.models import (
     EvaluationMetadata,
     EvaluationModel,
     EvaluationStatus,
+    utc_now,
 )
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.schemas import EvaluationCreate
@@ -56,6 +57,9 @@ class EvaluationService:
         self, evaluation: EvaluationModel, evaluation_create: EvaluationCreate
     ) -> EvaluationModel:
 
+        evaluation.metadata_entry.started_at = utc_now()
+        evaluation.metadata_entry.completed_at = None
+        evaluation.metadata_entry.duration = 0.0
         self._set_status(evaluation, EvaluationStatus.RUNNING)
         self.repository.save_evaluation(evaluation)
         total_benchmarks = len(evaluation.benchmarks)
@@ -80,17 +84,14 @@ class EvaluationService:
                 benchmark.results = eval_results.get("results", {}).get(
                     benchmark.name, {}
                 )
-                # self._extract_benchmark_score(
-                #     eval_results.get("results", {}),
-                #     benchmark.name,
-                # )
 
             num_benchmarks_evaluated += 1
             self._update_evaluation_progress(
                 evaluation, total_benchmarks, num_benchmarks_evaluated
             )
 
-        self._set_status(evaluation, EvaluationStatus.COMPLETED)
+        final_status = self._get_final_evaluation_status(evaluation.benchmarks)
+        self._complete_evaluation(evaluation, final_status)
         self.repository.save_evaluation(evaluation)
 
         return evaluation
@@ -123,19 +124,41 @@ class EvaluationService:
         if isinstance(model, EvaluationModel):
             model.metadata_entry.evaluation_status = status
 
-    def _extract_benchmark_score(
-        self,
-        evaluation_results: dict[str, Any],
-        benchmark_name: str,
-    ) -> float | None:
-        benchmark_result = evaluation_results.get(benchmark_name, evaluation_results)
+    def _complete_evaluation(
+        self, evaluation: EvaluationModel, status: EvaluationStatus
+    ) -> None:
+        completed_at = utc_now()
+        started_at = self._to_aware_utc(evaluation.metadata_entry.started_at)
 
-        for metric_name, value in benchmark_result.items():
-            if metric_name.endswith("_stderr"):
-                continue
-            if isinstance(value, int | float):
-                return float(value)
-        return None
+        self._set_status(evaluation, status)
+        evaluation.metadata_entry.completed_at = completed_at
+        evaluation.metadata_entry.duration = (completed_at - started_at).total_seconds()
+        evaluation.metadata_entry.progress = 100.0
+        self.repository.save_evaluation(evaluation)
+
+    def _to_aware_utc(self, value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+
+        return value.astimezone(UTC)
+
+    def _get_final_evaluation_status(
+        self, benchmarks: list[BenchmarkModel]
+    ) -> EvaluationStatus:
+        if not benchmarks:
+            return EvaluationStatus.COMPLETED
+
+        num_failed = sum(
+            benchmark.status == EvaluationStatus.FAILED for benchmark in benchmarks
+        )
+
+        if num_failed == len(benchmarks):
+            return EvaluationStatus.FAILED
+
+        if num_failed > 0:
+            return EvaluationStatus.PARTIAL_FAILED
+
+        return EvaluationStatus.COMPLETED
 
     def _update_evaluation_progress(
         self,

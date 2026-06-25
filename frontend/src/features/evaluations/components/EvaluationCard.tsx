@@ -5,6 +5,10 @@ import { formatProgressValue } from "../utils/utils"
 
 type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
+const formatStatus = (status: string) => {
+  return status.replaceAll("_", " ")
+}
+
 const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
   const progress = record.metadata_entry.progress ?? 0
   const type = record.metadata_entry.evaluation_status
@@ -15,7 +19,7 @@ const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
       <div className="w-full">
         <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
           <span>Status</span>
-          <span>{type}</span>
+          <span>{formatStatus(type)}</span>
         </div>
 
         <div className="mt-2 flex items-center gap-3">
@@ -31,7 +35,7 @@ const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
     </div>
   ) : (
     <div className="text-[11px] font-semibold tracking-[0.18em] text-muted-foreground capitalize">
-      <Badge variant="outline">{type}</Badge>
+      <Badge variant="outline">{formatStatus(type)}</Badge>
     </div>
   )
 }
