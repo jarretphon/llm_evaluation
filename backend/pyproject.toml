@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "accelerate>=1.14.0",
     "deepdiff>=9.1.0",
     "fastapi-users[sqlalchemy]>=15.0.5",
     "fastapi[standard]>=0.136.1",
@@ -14,6 +15,7 @@ dependencies = [
     "ruamel-yaml>=0.19.1",
     "ruff>=0.15.13",
     "sqlmodel>=0.0.38",
+    "torch>=2.12.1",
     "transformers>=5.12.0",
     "uvicorn[standard]>=0.47.0",
 ]

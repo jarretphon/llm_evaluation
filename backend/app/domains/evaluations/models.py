@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 
 class EvaluationStatus(StrEnum):
@@ -52,7 +52,8 @@ class BenchmarkModel(SQLModel, table=True):
     name: str
     description: str = Field(default="")
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
-    # progress: float = Field(default=0.0)
-    score: Optional[float] = Field(default=None)
+    results: dict[str, str] = Field(
+        default_factory=dict, sa_column=Column(JSON, nullable=False)
+    )
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="benchmarks")

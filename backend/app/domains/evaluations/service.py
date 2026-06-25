@@ -77,10 +77,13 @@ class EvaluationService:
                 self._set_status(benchmark, EvaluationStatus.FAILED)
             else:
                 self._set_status(benchmark, EvaluationStatus.COMPLETED)
-                benchmark.score = self._extract_benchmark_score(
-                    eval_results.get("results", {}),
-                    benchmark.name,
+                benchmark.results = eval_results.get("results", {}).get(
+                    benchmark.name, {}
                 )
+                # self._extract_benchmark_score(
+                #     eval_results.get("results", {}),
+                #     benchmark.name,
+                # )
 
             num_benchmarks_evaluated += 1
             self._update_evaluation_progress(

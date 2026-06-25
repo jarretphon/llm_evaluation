@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Dict
 
 from pydantic import BaseModel
 
@@ -16,8 +17,7 @@ class BenchmarkRead(BenchmarkBase):
     id: uuid.UUID
     description: str
     status: str
-    progress: float | None = None
-    score: float | None = None
+    results: Dict[str, str]
 
 
 class EvaluationMetadata(BaseModel):

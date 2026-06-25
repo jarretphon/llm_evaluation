@@ -236,8 +236,3 @@ def get_standalone_tasks(task_manager: TaskManager) -> list[str]:
 #     else:
 #         # 2. Handles internal base-templates or unpopulated items safely
 #         print(f"Task: {task_name}, output_type: [] (No configuration file loaded)")
-
-
-print(task_manager.task_index["afrimgsm-irokobench"])
-print(task_manager.task_index["mmlu_stem_tasks"])
-print(task_manager.task_index["mmlu_college_mathematics"])
