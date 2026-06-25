@@ -1,22 +1,18 @@
 import { CirclePlay, Search } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { NewEvalDialog } from "@/features/evaluations/components/NewEvalDialog"
 import { CurrentEvalDialog } from "@/features/evaluations/components/CurrentEvalDialog"
+import { useGetEvaluations } from "@/features/evaluations/hooks/queries/useEvaluations"
+import type { EvaluationRead } from "@/features/evaluations/schemas/evaluations"
+import { EvaluationCard } from "./EvaluationCard"
 
-import {
-  evaluations,
-  type EvaluationRecord,
-  type FilterOption,
-} from "@/data/evaluations"
-
-const evaluationRecords = evaluations
+type EvaluationStatus = "running" | "completed" | "failed" | "queued"
+type FilterOption = EvaluationStatus | "all"
 
 const filters: Array<{ value: FilterOption; label: string }> = [
   { value: "all", label: "All" },
@@ -34,12 +30,22 @@ const initialCounts: Record<FilterOption, number> = {
   queued: 0,
 }
 
-const SearchField = ({ placeholder }: { placeholder: string }) => {
+const SearchField = ({
+  placeholder,
+  value,
+  onChange,
+}: {
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+}) => {
   return (
     <div className="relative w-full min-w-0 flex-1 lg:w-full lg:max-w-xs">
       <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
       <Input
         placeholder={placeholder}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         className="h-10 w-full rounded-xl border-white/15 bg-[#202020] pl-9 text-sm text-white"
       />
     </div>
@@ -71,100 +77,77 @@ const FilterTabs = ({
   )
 }
 
-const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
-  const progress = record.metadata.progress ?? 0
-  const type = record.evalStatus
-
-  return type === "running" ? (
-    <div className="flex w-full flex-col gap-2 sm:ml-4 sm:shrink-0 sm:flex-row sm:items-center sm:gap-4 lg:w-90">
-      <div className="w-full">
-        <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          <span>Status</span>
-          <span>{type}</span>
-        </div>
-
-        <div className="mt-2 flex items-center gap-3">
-          <Progress value={progress} className="flex-1" />
-          <span className="text-sm font-medium text-foreground/80 tabular-nums">
-            {progress}%
-          </span>
-        </div>
-      </div>
-    </div>
-  ) : (
-    <div className="text-[11px] font-semibold tracking-[0.18em] text-muted-foreground capitalize sm:ml-4">
-      <Badge variant="outline">{type}</Badge>
-    </div>
-  )
-}
-
-const EvaluationRow = ({
-  record,
-  onSelect,
-}: {
-  record: EvaluationRecord
-  onSelect: (record: EvaluationRecord) => void
-}) => {
-  return (
-    <div
-      className="flex cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 transition hover:bg-[#252525] sm:flex-row sm:items-center sm:justify-between"
-      onClick={() => onSelect(record)}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1b1b1b] text-sm font-bold text-white">
-          {record.model.symbol}
-        </div>
-
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-white">
-            {record.model.name}
-          </h3>
-          <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
-            {record.model.description}
-          </p>
-        </div>
-      </div>
-
-      <EvaluationProgress record={record} />
-    </div>
-  )
+const getEvaluationStatus = (record: EvaluationRead): EvaluationStatus => {
+  return record.metadata_entry.evaluation_status as EvaluationStatus
 }
 
 export function EvaluationTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =
-    useState<EvaluationRecord | null>(null)
+    useState<EvaluationRead | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("all")
-  const searchPlaceholder = "Search models..."
-  const filteredEvaluations = useMemo(
-    () =>
-      selectedFilter === "all"
-        ? evaluationRecords
-        : evaluationRecords.filter(
-            (evaluation) => evaluation.evalStatus === selectedFilter
-          ),
-    [selectedFilter]
-  )
+  const [searchQuery, setSearchQuery] = useState("")
+  const { data: evaluationRecords = [], isPending, error } = useGetEvaluations()
+  const searchPlaceholder = "Search evaluations..."
+  const filteredEvaluations = useMemo(() => {
+    const normalisedSearch = searchQuery.trim().toLowerCase()
+
+    return evaluationRecords.filter((evaluation) => {
+      const status = getEvaluationStatus(evaluation)
+      const matchesFilter =
+        selectedFilter === "all" || status === selectedFilter
+      const matchesSearch =
+        !normalisedSearch ||
+        evaluation.id.toLowerCase().includes(normalisedSearch) ||
+        status.toLowerCase().includes(normalisedSearch) ||
+        evaluation.benchmarks.some((benchmark) =>
+          benchmark.name.toLowerCase().includes(normalisedSearch)
+        )
+
+      return matchesFilter && matchesSearch
+    })
+  }, [evaluationRecords, searchQuery, selectedFilter])
 
   const counts = useMemo(
     () =>
-      evaluations.reduce<Record<FilterOption, number>>(
+      evaluationRecords.reduce<Record<FilterOption, number>>(
         (acc, e) => {
+          const status = getEvaluationStatus(e)
           acc.all += 1
-          acc[e.evalStatus] += 1
+          acc[status] += 1
           return acc
         },
         { ...initialCounts }
       ),
-    []
+    [evaluationRecords]
   )
+
+  if (isPending) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-[#181818] px-6 py-10 text-center text-sm text-red-500">
+        Failed to load evaluations: {error.message}
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto h-full w-full max-w-360 px-4 text-white">
       <Card className="h-full w-full rounded-2xl border border-white/10 bg-[#171717] p-4 shadow-2xl">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex lg:justify-between">
-          <SearchField placeholder={searchPlaceholder} />
+          <SearchField
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
 
           <Button
             className="order-2 w-fit shrink-0 cursor-pointer rounded-md whitespace-nowrap lg:order-3 lg:h-8 lg:w-auto lg:gap-1 lg:px-3"
@@ -185,8 +168,8 @@ export function EvaluationTable() {
 
         <div className="mt-4 space-y-4">
           {filteredEvaluations.map((e) => (
-            <EvaluationRow
-              key={e.model.name}
+            <EvaluationCard
+              key={e.id}
               record={e}
               onSelect={(record) => {
                 setActiveEvaluation(record)
@@ -194,6 +177,11 @@ export function EvaluationTable() {
               }}
             />
           ))}
+          {filteredEvaluations.length === 0 && (
+            <div className="rounded-xl border border-white/10 bg-[#181818] px-6 py-10 text-center text-sm text-zinc-400">
+              No evaluations found.
+            </div>
+          )}
         </div>
       </Card>
       <NewEvalDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />

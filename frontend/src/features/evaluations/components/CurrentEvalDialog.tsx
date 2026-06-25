@@ -1,21 +1,26 @@
-import type { EvaluationRecord } from "@/data/evaluations"
 import type { components } from "@/types/schema"
 
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
-import type { BenchmarkRecord } from "@/data/benchmarks"
 import { EvalProgress } from "@/features/evaluations/components/EvalProgress"
-import { BenchmarkTable } from "./BenchmarkTable"
+import {
+  BenchmarkTable,
+  type BenchmarkTableBenchmark,
+  type BenchmarkTableEvaluation,
+} from "./BenchmarkTable"
 import { EvalDurationStats } from "./EvalDurationStats"
 import { ResponsiveDialog } from "@/components/ResponsiveDialog"
+import { useGetEvaluationById } from "@/features/evaluations/hooks/queries/useEvaluations"
 
 type Model = components["schemas"]["LLMRead"]
+type EvaluationRead = components["schemas"]["EvaluationRead"]
+
 interface ModalProps {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  model: Model
-  evaluation: EvaluationRecord | null
-  onRetryBenchmark?: (benchmark: BenchmarkRecord) => void
+  model?: Model
+  evaluation: EvaluationRead | null
+  onRetryBenchmark?: (benchmark: BenchmarkTableBenchmark) => void
 }
 
 const dialogTexts = {
@@ -25,6 +30,72 @@ const dialogTexts = {
   secondaryActionLabel: "Close",
 }
 
+const formatDateTime = (value: string | null | undefined) => {
+  if (!value) {
+    return "—"
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString()
+}
+
+const formatDuration = (duration: number) => {
+  if (duration <= 0) {
+    return "—"
+  }
+
+  if (duration < 60) {
+    return `${duration.toFixed(1)} sec`
+  }
+
+  return `${Math.round(duration / 60)} min`
+}
+
+const mockActiveEvaluation: EvaluationRead = {
+  benchmarks: [
+    {
+      name: "hello",
+      id: "aadsfa",
+      description: "hello",
+      status: "running",
+      results: {
+        accuracy: "0.8",
+        "accuracy,stderr": "0.1",
+      },
+    },
+    {
+      name: "another metric",
+      id: "agaghs",
+      description: "hello",
+      status: "running",
+      results: {
+        accuracy: "0.8",
+        "accuracy,stderr": "0.1",
+        mse: "0.2",
+        "mse,stderr": "0.1",
+        f1_score: "0.9",
+        "f1_score,stderr": "0.05",
+        precision: "0.85",
+        "precision,stderr": "0.03",
+        recall: "0.88",
+        "recall,stderr": "0.04",
+      },
+    },
+  ],
+  id: "asdfadsf",
+  metadata_entry: {
+    started_at: "sdafsdafdsaf",
+    duration: 100,
+    evaluation_status: "running",
+    completed_at: "adfads",
+    estimated_end_time: "asdfafd",
+  },
+}
+
 export function CurrentEvalDialog({
   isOpen,
   setIsOpen,
@@ -32,47 +103,47 @@ export function CurrentEvalDialog({
   evaluation,
   onRetryBenchmark,
 }: ModalProps) {
+  const evaluationId = evaluation?.id ?? ""
+  const { data: latestEvaluation } = useGetEvaluationById({
+    evaluationId,
+    enabled: isOpen && !!evaluationId,
+  })
+  const activeEvaluation = latestEvaluation ?? evaluation
+
   const content = useMemo(() => {
-    if (!evaluation) {
+    if (!activeEvaluation) {
       return null
     }
 
-    const isRunning = evaluation.evalStatus === "running"
-    const timelineRows = isRunning
-      ? [
-          { label: "Started", value: evaluation.metadata.start },
-          { label: "Duration", value: evaluation.metadata.duration },
-          {
-            label: "Estimated End",
-            value: evaluation.metadata.estimatedEnd ?? "—",
-          },
-        ]
-      : [
-          { label: "Started", value: evaluation.metadata.start },
-          { label: "Ended", value: evaluation.metadata.end ?? "—" },
-          { label: "Duration", value: evaluation.metadata.duration },
-        ]
+    const metadata = activeEvaluation.metadata_entry
+    const progress = metadata.progress ?? 0
+    const status = metadata.evaluation_status
+    const isIncomplete = status === "running" || progress < 100
+    const title = model?.endpoint ?? activeEvaluation.id
+    const timelineRows = [
+      { label: "Started", value: formatDateTime(metadata.started_at) },
+      { label: "Completed", value: formatDateTime(metadata.completed_at) },
+      { label: "Duration", value: formatDuration(metadata.duration) },
+    ]
 
     return (
-      <div className="flex w-full flex-col gap-4">
-        <div className="flex shrink-0 justify-between border-b border-border/60 py-5">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {model.endpoint}
+      <div className="flex w-full min-w-0 flex-col gap-4 overflow-hidden">
+        <div className="flex min-w-0 justify-between gap-3 border-b border-border/60 py-5">
+          <h2 className="min-w-0 truncate text-xl font-semibold tracking-tight">
+            {title}
           </h2>
-          <Badge className="ml-auto w-fit px-2.5 capitalize">
-            {evaluation.evalStatus}
-          </Badge>
+          <Badge className="ml-auto w-fit px-2.5 capitalize">{status}</Badge>
         </div>
 
         <EvalDurationStats data={timelineRows} />
-        {isRunning && <EvalProgress evaluation={evaluation} />}
+        {isIncomplete && <EvalProgress evaluation={activeEvaluation} />}
         <BenchmarkTable
-          evaluation={evaluation}
+          evaluation={mockActiveEvaluation}
           onRetryBenchmark={onRetryBenchmark}
         />
       </div>
     )
-  }, [evaluation, onRetryBenchmark, model])
+  }, [activeEvaluation, onRetryBenchmark, model])
 
   return (
     <ResponsiveDialog

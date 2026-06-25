@@ -162,10 +162,10 @@ export interface components {
             description: string;
             /** Status */
             status: string;
-            /** Progress */
-            progress?: number | null;
-            /** Score */
-            score?: number | null;
+            /** Results */
+            results: {
+                [key: string]: string;
+            };
         };
         /** EvaluationCreate */
         EvaluationCreate: {

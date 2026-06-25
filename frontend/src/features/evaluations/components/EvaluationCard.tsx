@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import type { components } from "@/types/schema"
+import { formatProgressValue } from "../utils/utils"
 
 type EvaluationRecord = components["schemas"]["EvaluationRead"]
 
@@ -18,9 +19,12 @@ const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
         </div>
 
         <div className="mt-2 flex items-center gap-3">
-          <Progress value={progress} className="flex-1" />
+          <Progress
+            value={formatProgressValue(progress)}
+            className="flex-10/12"
+          />
           <span className="text-sm font-medium text-foreground/80 tabular-nums">
-            {progress}%
+            {formatProgressValue(progress)}%
           </span>
         </div>
       </div>
@@ -50,7 +54,8 @@ export function EvaluationCard({
             {record.id}
           </h3>
           <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
-            Started {record.metadata_entry.started_at}
+            {record.benchmarks.length} benchmarks • Started{" "}
+            {record.metadata_entry.started_at}
           </p>
         </div>
       </div>

@@ -5,6 +5,16 @@ import type {
 } from "@/features/evaluations/schemas/evaluations"
 
 export const evaluationService = {
+  getEvaluations: async (): Promise<EvaluationRead[]> => {
+    const { data, error } = await apiClient.GET("/evaluations")
+
+    if (error) {
+      throw new Error("Failed to fetch evaluations")
+    }
+
+    return data
+  },
+
   getBenchmarkOptions: async () => {
     const { data, error } = await apiClient.GET("/evaluations/benchmarks")
 

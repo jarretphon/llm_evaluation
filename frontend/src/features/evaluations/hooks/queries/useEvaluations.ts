@@ -9,6 +9,24 @@ export function useGetBenchmarkOptions() {
   })
 }
 
+export function useGetEvaluations() {
+  return useQuery({
+    queryKey: ["evaluations"],
+    queryFn: evaluationService.getEvaluations,
+    refetchInterval: (query) => {
+      const evaluations = query.state.data ?? []
+      const hasIncompleteEvaluation = evaluations.some((evaluation) => {
+        const progress = evaluation.metadata_entry.progress ?? 0
+        const status = evaluation.metadata_entry.evaluation_status
+
+        return progress < 100 && (status === "running" || status === "queued")
+      })
+
+      return hasIncompleteEvaluation ? 1500 : false
+    },
+  })
+}
+
 export function useGetEvaluationById({
   evaluationId,
   enabled = true,
