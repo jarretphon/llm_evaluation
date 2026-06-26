@@ -114,59 +114,121 @@ def require_completions(task_name):
 #     return sub_tasks
 
 
-def _flatten_task_field(task_field, task_manager: "TaskManager") -> list[str]:
-    """Recursively processes and flattens arbitrarily nested task fields (strings/dicts/lists)."""
-    # Case 1: Empty or missing field
-    if not task_field:
-        return []
+# def _flatten_task_field(task_field, task_manager: "TaskManager") -> list[str]:
+#     """Recursively processes and flattens arbitrarily nested task fields (strings/dicts/lists)."""
+#     # Case 1: Empty or missing field
+#     if not task_field:
+#         return []
 
-    # Case 2: A simple task or group reference string
-    if isinstance(task_field, str):
-        return get_group_tasks(task_field, task_manager)
+#     # Case 2: A simple task or group reference string
+#     if isinstance(task_field, str):
+#         return get_group_tasks(task_field, task_manager)
 
-    # Case 3: A configuration dictionary (handles inline subgroups at any depth)
-    if isinstance(task_field, dict):
-        nested_tasks = task_field.get("task", [])
-        return _flatten_task_field(nested_tasks, task_manager)
+#     # Case 3: A configuration dictionary (handles inline subgroups at any depth)
+#     if isinstance(task_field, dict):
+#         nested_tasks = task_field.get("task", [])
+#         return _flatten_task_field(nested_tasks, task_manager)
 
-    # Case 4: An iterable list of items (could mix strings and dictionaries)
-    if isinstance(task_field, list):
-        leaves = []
-        for item in task_field:
-            leaves.extend(_flatten_task_field(item, task_manager))
-        return leaves
+#     # Case 4: An iterable list of items (could mix strings and dictionaries)
+#     if isinstance(task_field, list):
+#         leaves = []
+#         for item in task_field:
+#             leaves.extend(_flatten_task_field(item, task_manager))
+#         return leaves
 
-    return []
+#     return []
 
 
-def get_group_tasks(group_name: str, task_manager: "TaskManager") -> list[str]:
-    """Recursively get leaf tasks for a given group, handling infinite depth configurations."""
+# def get_group_tasks(group_name: str, task_manager: "TaskManager") -> list[str]:
+#     """Recursively get leaf tasks for a given group, handling infinite depth configurations."""
+#     index = task_manager.task_index
+
+#     # Base Case: Handle safe exits for missing tasks/groups
+#     if group_name not in index:
+#         return []
+
+#     entry = index[group_name]
+
+#     # Base Case: If it is a leaf task, return its name immediately
+#     if entry.kind == Kind.TASK:
+#         return [group_name]
+
+#     sub_tasks = []
+
+#     # Scenario A: Standard Group or Inline Macro Benchmark
+#     if entry.kind == Kind.GROUP:
+#         tasks_field = entry.cfg.get("task", []) if entry.cfg else []
+#         sub_tasks.extend(_flatten_task_field(tasks_field, task_manager))
+
+#     # Scenario B: Tag collections
+#     elif entry.kind == Kind.TAG:
+#         if hasattr(entry, "tags") and entry.tags:
+#             for tag_item in entry.tags:
+#                 sub_tasks.extend(_flatten_task_field(tag_item, task_manager))
+
+#     return sub_tasks
+
+def get_group_tasks(
+    group_name: str, 
+    task_manager: TaskManager, 
+    memo: dict[str, list[str]] = None
+) -> list[str]:
+    """Recursively get leaf tasks for a given group, optimized with memoization."""
+    if memo is None:
+        memo = {}
+
+    # 1. Immediate cache hit
+    if group_name in memo:
+        return memo[group_name]
+
     index = task_manager.task_index
-
-    # Base Case: Handle safe exits for missing tasks/groups
     if group_name not in index:
         return []
 
     entry = index[group_name]
 
-    # Base Case: If it is a leaf task, return its name immediately
+    # Base Case: Leaf task
     if entry.kind == Kind.TASK:
         return [group_name]
 
-    sub_tasks = []
+    # 2. Yield task streams using generators to avoid temporary list creations
+    def _collect():
+        if entry.kind == Kind.GROUP:
+            tasks_field = entry.cfg.get("task", []) if entry.cfg else []
+            yield from _flatten_task_field(tasks_field, task_manager, memo)
 
-    # Scenario A: Standard Group or Inline Macro Benchmark
-    if entry.kind == Kind.GROUP:
-        tasks_field = entry.cfg.get("task", []) if entry.cfg else []
-        sub_tasks.extend(_flatten_task_field(tasks_field, task_manager))
+        elif entry.kind == Kind.TAG:
+            if hasattr(entry, "tags") and entry.tags:
+                for tag_item in entry.tags:
+                    yield from _flatten_task_field(tag_item, task_manager, memo)
 
-    # Scenario B: Tag collections
-    elif entry.kind == Kind.TAG:
-        if hasattr(entry, "tags") and entry.tags:
-            for tag_item in entry.tags:
-                sub_tasks.extend(_flatten_task_field(tag_item, task_manager))
+    # 3. Materialize and cache the final result for this group
+    result = list(_collect())
+    memo[group_name] = result
+    return result
 
-    return sub_tasks
+
+def _flatten_task_field(task_field, task_manager: TaskManager, memo: dict):
+    """Generator version of flatten to stream strings directly to the collector."""
+    if not task_field:
+        return
+
+    # Case A: String reference
+    if isinstance(task_field, str):
+        yield from get_group_tasks(task_field, task_manager, memo)
+        return
+
+    # Case B: List iterable
+    if isinstance(task_field, list):
+        for item in task_field:
+            yield from _flatten_task_field(item, task_manager, memo)
+        return
+
+    # Case C: Configuration dictionary
+    if isinstance(task_field, dict):
+        nested_tasks = task_field.get("task", [])
+        yield from _flatten_task_field(nested_tasks, task_manager, memo)
+        return
 
 
 def is_standalone_task(entry):
@@ -236,3 +298,5 @@ def get_standalone_tasks(task_manager: TaskManager) -> list[str]:
 #     else:
 #         # 2. Handles internal base-templates or unpopulated items safely
 #         print(f"Task: {task_name}, output_type: [] (No configuration file loaded)")
+
+

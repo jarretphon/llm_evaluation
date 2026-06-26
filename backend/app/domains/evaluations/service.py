@@ -1,8 +1,16 @@
 import uuid
 from datetime import UTC, datetime
 
+import pandas as pd
+import numpy as np
+
+from functools import lru_cache
+
 import lm_eval
-from app.domains.evaluations.errors import EvaluationNotFoundError
+from app.domains.evaluations.errors import (
+    EvaluationNotFoundError,
+    NoBenchmarksSelectedError,
+)
 from app.domains.evaluations.models import (
     BenchmarkModel,
     EvaluationMetadata,
@@ -17,13 +25,19 @@ from app.domains.evaluations.utils import get_group_tasks, require_completions
 from lm_eval.tasks import TaskManager
 
 
+DEFAULT_EVALUATION_MODEL_NAME = "default"
+
+
 class EvaluationService:
     def __init__(self, repository: EvaluationRepository) -> None:
         self.repository = repository
-        self.task_manager = TaskManager()
+
+    @lru_cache(maxsize=1)
+    def get_task_manager(self) -> TaskManager:
+        return TaskManager()
 
     def list_benchmark_options(self) -> dict[str, list[str]]:
-        return get_root_groups(self.task_manager)
+        return get_root_groups(self.get_task_manager())
 
     def list_evaluations(
         self, offset: int = 0, limit: int = 10
@@ -39,56 +53,72 @@ class EvaluationService:
         return evaluation
 
     def create_evaluation(self, evaluation_create: EvaluationCreate) -> EvaluationModel:
-        benchmark_names = self.get_subtasks(evaluation_create.benchmarks)
+        if not evaluation_create.benchmarks:
+            raise NoBenchmarksSelectedError()
 
         evaluation = EvaluationModel(
             llm_id=evaluation_create.model_id,
             metadata_entry=EvaluationMetadata(),
-            benchmarks=[
-                BenchmarkModel(name=benchmark_name)
-                for benchmark_name in benchmark_names
-            ],
+            benchmarks= [
+                BenchmarkModel(name=benchmark) for benchmark in evaluation_create.benchmarks
+            ]
         )
 
         self.repository.create_evaluation(evaluation)
         return evaluation
 
-    def start_evaluation(
-        self, evaluation: EvaluationModel, evaluation_create: EvaluationCreate
-    ) -> EvaluationModel:
-
-        evaluation.metadata_entry.started_at = utc_now()
-        evaluation.metadata_entry.completed_at = None
-        evaluation.metadata_entry.duration = 0.0
+    def start_registered_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
+        evaluation = self.get_evaluation(evaluation_id)
         self._set_status(evaluation, EvaluationStatus.RUNNING)
+        evaluation.metadata_entry.started_at = utc_now()
         self.repository.save_evaluation(evaluation)
-        total_benchmarks = len(evaluation.benchmarks)
-        num_benchmarks_evaluated = 0
+        return evaluation
 
-        for benchmark in evaluation.benchmarks:
+    def run_registered_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
+        evaluation = self.get_evaluation(evaluation_id)
+       
+        model_endpoint = evaluation.llm_entry.endpoint
+        model_name = DEFAULT_EVALUATION_MODEL_NAME
+        benchmark_tasks = [
+            (benchmark, self.get_subtasks([benchmark.name]))
+            for benchmark in evaluation.benchmarks
+        ]
+
+        total_tasks = sum(len(task_list) for _, task_list in benchmark_tasks)
+        num_tasks_evaluated = 0
+
+        for benchmark, task_list in benchmark_tasks:
             self._set_status(benchmark, EvaluationStatus.RUNNING)
             self.repository.save_evaluation(evaluation)
-            try:
-                eval_results = self._run_lm_eval(
-                    base_url=evaluation_create.model_endpoint,
-                    model_name=evaluation_create.model_name,
-                    task=benchmark.name,
-                )
-            except Exception as e:
-                print(
-                    f"Error occurred while running LM eval for benchmark {benchmark.name}: {e}"
-                )
-                self._set_status(benchmark, EvaluationStatus.FAILED)
-            else:
-                self._set_status(benchmark, EvaluationStatus.COMPLETED)
-                benchmark.results = eval_results.get("results", {}).get(
-                    benchmark.name, {}
-                )
 
-            num_benchmarks_evaluated += 1
-            self._update_evaluation_progress(
-                evaluation, total_benchmarks, num_benchmarks_evaluated
-            )
+            benchmark_results = {}
+
+            for task in task_list:
+                try:
+                    eval_results = self._run_lm_eval(
+                        base_url=model_endpoint,
+                        model_name=model_name,
+                        task=task
+                    )
+                except Exception as e:
+                    print(
+                        f"Error occurred while running LM eval for benchmark {benchmark.name}: {e}"
+                    )
+                    benchmark_results[task] = {"error": True, "results": {}} 
+                else:
+                    benchmark_results[task] = {
+                        "error": False,
+                        "results": eval_results.get("results", {}).get(task, {}),
+                    }
+            
+                num_tasks_evaluated += 1
+                self._update_evaluation_progress(
+                    evaluation, total_tasks, num_tasks_evaluated
+                )
+             
+            status, aggregate_results = self.aggregate_results(benchmark_results)
+            self._set_status(benchmark, status)
+            benchmark.results = aggregate_results
 
         final_status = self._get_final_evaluation_status(evaluation.benchmarks)
         self._complete_evaluation(evaluation, final_status)
@@ -163,17 +193,43 @@ class EvaluationService:
     def _update_evaluation_progress(
         self,
         evaluation: EvaluationModel,
-        total_tasks: int,
+        total: int,
         num_evaluated: int,
     ) -> None:
-        if total_tasks == 0:
-            evaluation.metadata_entry.progress = 100.0
-        else:
-            evaluation.metadata_entry.progress = (num_evaluated / total_tasks) * 100
+        progress = round((num_evaluated / total) * 100)
+        evaluation.metadata_entry.progress = progress
         self.repository.save_evaluation(evaluation)
 
     def get_subtasks(self, groups: list[str]) -> list[str]:
         subtasks = []
         for group_name in groups:
-            subtasks.extend(get_group_tasks(group_name, self.task_manager))
+            subtasks.extend(get_group_tasks(group_name, self.get_task_manager()))
         return subtasks
+
+
+    def aggregate_results(self, results: dict[str, dict]) -> dict:
+       
+        any_failed = any(result["error"] for result in results.values())
+        all_failed = all(result["error"] for result in results.values())
+
+        if all_failed:
+            status = EvaluationStatus.FAILED
+        elif any_failed:
+            status = EvaluationStatus.PARTIAL_FAILED
+        else:
+            status = EvaluationStatus.COMPLETED
+
+        valid_records = [v["results"] for v in results.values() if not v["error"]]
+        df = pd.DataFrame(valid_records)
+        total_tasks = len(df)
+
+        stderr_cols = [col for col in df.columns if col.endswith(",stderr")]
+        score_cols = [col for col in df.columns if col not in stderr_cols]
+
+        aggregated_scores = df[score_cols].mean()
+        aggregated_stderrs = np.sqrt((df[stderr_cols] ** 2).sum(axis=0)) / total_tasks
+        
+        final_results = pd.concat([aggregated_scores, aggregated_stderrs]).round(5).to_dict()
+        
+        return status, final_results
+        
