@@ -55,4 +55,21 @@ export const evaluationService = {
 
     return data
   },
+
+  startEvaluation: async (evaluationId: string): Promise<EvaluationRead> => {
+    const { data, error } = await apiClient.POST(
+      "/evaluations/{evaluation_id}",
+      {
+        params: {
+          path: { evaluation_id: evaluationId },
+        },
+      }
+    )
+
+    if (error) {
+      throw new Error("Failed to start evaluation")
+    }
+
+    return data
+  },
 }

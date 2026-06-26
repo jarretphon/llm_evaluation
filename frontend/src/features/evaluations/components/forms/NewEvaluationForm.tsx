@@ -11,7 +11,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { TriCheckbox } from "@/features/evaluations/components/TriCheckbox"
 import type { CheckboxState } from "@/features/evaluations/components/TriCheckbox"
 
-import { useCreateEvaluation } from "@/features/evaluations/hooks/queries/useEvaluations"
+import {
+  useCreateEvaluation,
+  useStartEvaluation,
+} from "@/features/evaluations/hooks/queries/useEvaluations"
 import type { EvaluationCreate } from "@/features/evaluations/schemas/evaluations"
 import type { components } from "@/types/schema"
 import { toast } from "sonner"
@@ -37,7 +40,8 @@ export function NewEvaluationForm({
   setSelectedItems: React.Dispatch<React.SetStateAction<Set<string>>>
   onSubmitSuccess: () => void
 }) {
-  const { mutate, isPending } = useCreateEvaluation()
+  const { mutate: createEvaluation, isPending } = useCreateEvaluation()
+  const { mutate: startEvaluation } = useStartEvaluation({ modelId: model.id })
 
   const selectedBenchmarkNames = Array.from(selectedItems)
 
@@ -60,13 +64,18 @@ export function NewEvaluationForm({
       benchmarks: selectedBenchmarkNames,
     }
 
-    mutate(evaluationCreate, {
-      onSuccess: () => {
-        toast.success("Evaluation started.")
+    createEvaluation(evaluationCreate, {
+      onSuccess: (createdEvaluation) => {
+        toast.success("Evaluation queued.")
         onSubmitSuccess()
+        startEvaluation(createdEvaluation.id, {
+          onError: () => {
+            toast.error("Failed to start evaluation. Marked as failed.")
+          },
+        })
       },
       onError: (error) => {
-        toast.error(`Failed to start evaluation. Error: ${error}`)
+        toast.error(`Failed to register evaluation. Error: ${error}`)
       },
     })
   }

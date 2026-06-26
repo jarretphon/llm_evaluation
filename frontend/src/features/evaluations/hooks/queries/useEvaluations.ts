@@ -66,3 +66,26 @@ export function useCreateEvaluation() {
     },
   })
 }
+
+export function useStartEvaluation({ modelId }: { modelId: string }) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (evaluationId: string) =>
+      evaluationService.startEvaluation(evaluationId),
+    onSuccess: (startedEvaluation) => {
+      queryClient.invalidateQueries({ queryKey: ["evaluations"] })
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] })
+      queryClient.invalidateQueries({
+        queryKey: ["evaluation", startedEvaluation.id],
+      })
+    },
+    onError: (_error, evaluationId) => {
+      queryClient.invalidateQueries({ queryKey: ["evaluations"] })
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] })
+      queryClient.invalidateQueries({
+        queryKey: ["evaluation", evaluationId],
+      })
+    },
+  })
+}

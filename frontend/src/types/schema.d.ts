@@ -121,7 +121,8 @@ export interface paths {
         /** Get Evaluation */
         get: operations["get_evaluation_evaluations__evaluation_id__get"];
         put?: never;
-        post?: never;
+        /** Start Evaluation */
+        post: operations["start_evaluation_evaluations__evaluation_id__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -639,6 +640,37 @@ export interface operations {
         };
     };
     get_evaluation_evaluations__evaluation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                evaluation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_evaluation_evaluations__evaluation_id__post: {
         parameters: {
             query?: never;
             header?: never;
