@@ -221,21 +221,29 @@ export interface components {
         };
         /** LLMCreate */
         LLMCreate: {
+            /** Name */
+            name: string;
             /** Endpoint */
             endpoint: string;
             /** Description */
             description: string;
             /** Provider */
             provider: string;
+            /** Api Key */
+            api_key: string;
         };
         /** LLMRead */
         LLMRead: {
+            /** Name */
+            name: string;
             /** Endpoint */
             endpoint: string;
             /** Description */
             description: string;
             /** Provider */
             provider: string;
+            /** Api Key */
+            api_key: string;
             /**
              * Id
              * Format: uuid
@@ -251,12 +259,16 @@ export interface components {
         };
         /** LLMUpdate */
         LLMUpdate: {
+            /** Name */
+            name?: string | null;
             /** Endpoint */
             endpoint?: string | null;
             /** Description */
             description?: string | null;
             /** Provider */
             provider?: string | null;
+            /** Api Key */
+            api_key?: string | null;
         };
         /** UserCreate */
         UserCreate: {

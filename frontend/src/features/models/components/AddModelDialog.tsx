@@ -24,7 +24,7 @@ const ADD_MODEL_FORM_ID = "add-model-form"
 export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{MODEL_TEXT.ADD_MODEL_DIALOG.title}</DialogTitle>
           <DialogDescription>

@@ -4,7 +4,7 @@ import { useEditModel } from "@/features/models/hooks/queries/useModels"
 
 import { ModelForm } from "@/features/models/components/forms/ModelActionFormContent"
 
-import type { LLMRead, LLMCreate } from "@/features/models/schemas/models"
+import type { LLMCreate, LLMRead } from "@/features/models/schemas/models"
 
 export function EditModelForm({
   formId,
@@ -17,11 +17,13 @@ export function EditModelForm({
 }) {
   const defaultValues = useMemo<LLMCreate>(
     () => ({
+      name: model.name,
       endpoint: model.endpoint,
+      api_key: model.api_key,
       description: model.description,
       provider: model.provider,
     }),
-    [model.description, model.endpoint, model.provider]
+    [model]
   )
 
   const { mutate, isPending } = useEditModel({

@@ -4,8 +4,10 @@ import { useCreateModel } from "@/features/models/hooks/queries/useModels"
 import type { LLMCreate } from "@/features/models/schemas/models"
 
 const ADD_MODEL_DEFAULT_VALUES: LLMCreate = {
+  name: "",
   endpoint: "",
   description: "",
+  api_key: "",
   provider: "Open AI",
 }
 

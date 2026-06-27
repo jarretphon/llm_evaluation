@@ -22,7 +22,9 @@ import type { LLMCreate } from "@/features/models/schemas/models"
 import { MODEL_TEXT } from "@/features/models/constants/texts"
 
 const formSchema = z.object({
+  name: z.string().min(1, "Please enter a name for the model."),
   endpoint: z.url({ message: "Please enter a valid URL (e.g., https://...)" }),
+  api_key: z.string().min(1, "Please enter an API key."),
   description: z.string(),
   provider: z.string().min(1, "Please enter a provider."),
 }) satisfies z.ZodType<LLMCreate>
@@ -54,6 +56,27 @@ export function ModelForm({
       <fieldset disabled={form.formState.isSubmitting || isSubmitting}>
         <FieldGroup>
           <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>
+                  {MODEL_TEXT.FORM.name.label}
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={MODEL_TEXT.FORM.name.placeholder}
+                  autoComplete="off"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
             name="endpoint"
             control={form.control}
             render={({ field, fieldState }) => (
@@ -66,6 +89,27 @@ export function ModelForm({
                   id={field.name}
                   aria-invalid={fieldState.invalid}
                   placeholder={MODEL_TEXT.FORM.endpoint.placeholder}
+                  autoComplete="off"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
+            name="api_key"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>
+                  {MODEL_TEXT.FORM.apiKey.label}
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={MODEL_TEXT.FORM.apiKey.placeholder}
                   autoComplete="off"
                 />
                 {fieldState.invalid && (

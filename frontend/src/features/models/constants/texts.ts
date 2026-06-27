@@ -17,7 +17,6 @@ export const MODEL_TEXT = {
   FORM: {
     name: {
       label: "Model Name",
-
       placeholder: "e.g. GPT-4 Turbo",
     },
     endpoint: {

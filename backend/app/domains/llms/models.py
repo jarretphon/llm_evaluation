@@ -8,9 +8,11 @@ class LLMModel(SQLModel, table=True):
     __tablename__ = "llms"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    endpoint: str = Field(unique=True)
+    name: str = Field(unique=True)
+    endpoint: str
     description: str
     provider: str
+    api_key: str
     added_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Suppress undefined reference warning from pylance and ruff due to forward reference type checking

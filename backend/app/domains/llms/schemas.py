@@ -6,14 +6,15 @@ from pydantic import BaseModel
 
 
 class LLMBase(BaseModel):
+    name: str
     endpoint: str
     description: str
     provider: str
+    api_key: str
 
 
 class LLMCreate(LLMBase):
     pass
-
 
 class LLMRead(LLMBase):
     id: uuid.UUID
@@ -22,6 +23,8 @@ class LLMRead(LLMBase):
 
 
 class LLMUpdate(BaseModel):
+    name: str | None = None
     endpoint: str | None = None
     description: str | None = None
     provider: str | None = None
+    api_key: str | None = None
