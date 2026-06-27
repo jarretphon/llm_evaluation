@@ -57,7 +57,11 @@ export function ModelCard({ model, onSelect }: ModelCardProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <CardTitle className="truncate text-base text-white">
-                  {model.endpoint}
+                  {model.name}
+
+                  <span className="text-muted-foreground">
+                    {" - "} {model.endpoint}
+                  </span>
                 </CardTitle>
                 <CardDescription className="line-clamp-2 text-xs leading-4 text-white/60 lg:line-clamp-3">
                   {model.description}

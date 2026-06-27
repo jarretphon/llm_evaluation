@@ -75,7 +75,7 @@ export function ModelDetails() {
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold md:text-3xl">
-              {data.endpoint}
+              {data.name} - {data.endpoint}
             </h1>
             <p className="mt-1 line-clamp-2 text-sm text-white/60 md:line-clamp-none">
               {data.description}
