@@ -1,11 +1,5 @@
 import { useMemo } from "react"
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   Card,
@@ -16,99 +10,149 @@ import {
 } from "@/components/ui/card"
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import type { BenchmarkCategory } from "@/data/benchmark-categories"
-import type { Model } from "@/data/models"
-import { getBenchmarkScore } from "@/data/model-benchmark-scores"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type {
+  ComparisonBenchmark,
+  ComparisonModel,
+} from "@/features/compare/schemas/comparisons"
 
-const chartColors = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-]
+const chartConfig = {
+  value: {
+    label: "Value",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig
 
-type ModelRadarChartProps = {
-  category: BenchmarkCategory
-  models: Model[]
+type EvaluationChartProps = {
+  benchmark: ComparisonBenchmark
+  models: ComparisonModel[]
 }
 
-export function EvaluationChart({ category, models }: ModelRadarChartProps) {
-  const chartConfig = useMemo(() => {
-    return models.reduce<ChartConfig>((acc, model, index) => {
-      acc[model.id] = {
-        label: model.name,
-        color: chartColors[index % chartColors.length],
-      }
-      return acc
-    }, {})
-  }, [models])
+export function EvaluationChart({ benchmark, models }: EvaluationChartProps) {
+  const defaultMetric = benchmark.metrics[0]
 
-  const chartData = useMemo(() => {
-    return category.benchmarks.map((benchmark) => {
-      const row: Record<string, number | string> = {
-        benchmark: benchmark.name,
-      }
-
-      models.forEach((model) => {
-        row[model.id] = getBenchmarkScore(model.id, benchmark.id)
-      })
-
-      return row
-    })
-  }, [category.benchmarks, models])
+  if (!defaultMetric) {
+    return (
+      <Card className="border border-border/60 bg-[#151515] text-white">
+        <CardHeader>
+          <CardTitle className="text-base text-white">
+            {benchmark.name}
+          </CardTitle>
+          <CardDescription className="text-xs text-white/60">
+            No numeric metrics were found for this benchmark.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
 
   return (
     <Card className="border border-border/60 bg-[#151515] text-white">
       <CardHeader>
-        <CardTitle className="text-base text-white">{category.label}</CardTitle>
+        <CardTitle className="text-base text-white">{benchmark.name}</CardTitle>
         <CardDescription className="text-xs text-white/60">
-          {category.description}
+          Latest completed evaluation only
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {models.length ? (
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-90 w-full"
-          >
-            <RadarChart data={chartData}>
-              <PolarGrid gridType="circle" className="fill-muted/50" />
-              <PolarAngleAxis
-                dataKey="benchmark"
-                tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11 }}
-              />
-              <PolarRadiusAxis
-                angle={30}
-                domain={[0, 100]}
-                tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 11 }}
-              />
-              <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {models.map((model) => (
-                <Radar
-                  key={model.id}
-                  dataKey={model.id}
-                  fill={`var(--color-${model.id})`}
-                  fillOpacity={0.2}
-                  stroke={`var(--color-${model.id})`}
-                  strokeWidth={1.5}
-                />
-              ))}
-            </RadarChart>
-          </ChartContainer>
-        ) : (
-          <div className="flex h-65 items-center justify-center text-sm text-white/50">
-            Select models to render the radar chart.
-          </div>
-        )}
+        <Tabs defaultValue={defaultMetric} className="gap-4">
+          <TabsList className="max-w-full justify-start overflow-x-auto rounded-2xl bg-muted/60 p-1">
+            {benchmark.metrics.map((metric) => (
+              <TabsTrigger key={metric} value={metric} className="px-3">
+                {metric}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {benchmark.metrics.map((metric) => (
+            <MetricChart
+              key={metric}
+              benchmark={benchmark}
+              metric={metric}
+              models={models}
+            />
+          ))}
+        </Tabs>
       </CardContent>
     </Card>
+  )
+}
+
+function MetricChart({
+  benchmark,
+  metric,
+  models,
+}: {
+  benchmark: ComparisonBenchmark
+  metric: string
+  models: ComparisonModel[]
+}) {
+  const { chartData, missingModelNames } = useMemo(() => {
+    const valuesByModelId = new Map(
+      benchmark.values
+        .filter((value) => value.metric === metric)
+        .map((value) => [value.model_id, value.value])
+    )
+
+    const rows = models.map((model) => {
+      const value = valuesByModelId.get(model.id) ?? null
+
+      return {
+        model: model.name,
+        value,
+      }
+    })
+    const missingNames = rows
+      .filter((row) => row.value === null)
+      .map((row) => row.model)
+
+    return {
+      chartData: rows,
+      missingModelNames: missingNames,
+    }
+  }, [benchmark.values, metric, models])
+
+  return (
+    <TabsContent value={metric} className="space-y-3">
+      <ChartContainer
+        config={chartConfig}
+        className="h-72 w-full"
+        initialDimension={{ width: 520, height: 288 }}
+      >
+        <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="model"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 11 }}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent indicator="dot" hideLabel />}
+          />
+          <Bar
+            dataKey="value"
+            fill="var(--color-value)"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ChartContainer>
+
+      {missingModelNames.length > 0 && (
+        <p className="text-xs text-white/50">
+          No value: {missingModelNames.join(", ")}
+        </p>
+      )}
+    </TabsContent>
   )
 }

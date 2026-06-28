@@ -1,17 +1,23 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
-import { ModelMultiSelect } from "@/features/compare/components/ModelMultiSelect"
+import { Card, CardContent } from "@/components/ui/card"
 import { EvaluationChart } from "@/features/compare/components/EvaluationChart"
-import { benchmarkCategories } from "@/data/benchmark-categories"
-import { models } from "@/data/models"
+import { ModelMultiSelect } from "@/features/compare/components/ModelMultiSelect"
+import { useCompareModels } from "@/features/compare/hooks/queries/useComparisons"
+import { useGetModels } from "@/features/models/hooks/queries/useModels"
 
 export function Compare() {
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([])
-
-  const selectedModels = useMemo(
-    () => models.filter((model) => selectedModelIds.includes(model.id)),
-    [selectedModelIds]
-  )
+  const {
+    data: models = [],
+    isPending: isModelsPending,
+    error: modelsError,
+  } = useGetModels()
+  const {
+    data: comparison,
+    isFetching: isComparisonFetching,
+    error: comparisonError,
+  } = useCompareModels(selectedModelIds)
 
   return (
     <div className="flex h-full w-full flex-col gap-6 p-4 text-white md:p-6">
@@ -21,15 +27,53 @@ export function Compare() {
         onChange={setSelectedModelIds}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {benchmarkCategories.map((category) => (
-          <EvaluationChart
-            key={category.id}
-            category={category}
-            models={selectedModels}
-          />
-        ))}
-      </div>
+      {isModelsPending && (
+        <CompareMessage message="Loading models..." />
+      )}
+
+      {modelsError && (
+        <CompareMessage message={`Failed to load models: ${modelsError.message}`} />
+      )}
+
+      {selectedModelIds.length === 0 && !isModelsPending && (
+        <CompareMessage message="Select models to compare their latest completed evaluations." />
+      )}
+
+      {selectedModelIds.length > 0 && isComparisonFetching && (
+        <CompareMessage message="Computing comparison..." />
+      )}
+
+      {comparisonError && (
+        <CompareMessage
+          message={`Failed to compare models: ${comparisonError.message}`}
+        />
+      )}
+
+      {comparison && comparison.benchmarks.length === 0 && (
+        <CompareMessage message="No completed benchmark results were found for the selected models." />
+      )}
+
+      {comparison && comparison.benchmarks.length > 0 && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {comparison.benchmarks.map((benchmark) => (
+            <EvaluationChart
+              key={benchmark.name}
+              benchmark={benchmark}
+              models={comparison.models}
+            />
+          ))}
+        </div>
+      )}
     </div>
+  )
+}
+
+function CompareMessage({ message }: { message: string }) {
+  return (
+    <Card className="border border-border/60 bg-[#151515] text-white">
+      <CardContent className="py-8 text-sm text-white/60">
+        {message}
+      </CardContent>
+    </Card>
   )
 }

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.api import evaluations, llms, users
+from app.api import evaluations, llms, users, comparisons
+
 
 api_router = APIRouter()
 api_router.include_router(users.router, prefix="/users", tags=["users"])
@@ -8,3 +9,4 @@ api_router.include_router(llms.router, prefix="/llms", tags=["llms"])
 api_router.include_router(
     evaluations.router, prefix="/evaluations", tags=["evaluations"]
 )
+api_router.include_router(comparisons.router, prefix="/comparisons", tags=["comparisons"])

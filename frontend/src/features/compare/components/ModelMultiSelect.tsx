@@ -8,7 +8,9 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
-import type { Model } from "@/data/models"
+import type { components } from "@/types/schema"
+
+type Model = Pick<components["schemas"]["LLMRead"], "id" | "name">
 
 type ModelMultiSelectProps = {
   models: Model[]
@@ -40,7 +42,10 @@ export function ModelMultiSelect({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <MultiSelect onValuesChange={handleValueChange}>
+        <MultiSelect
+          values={selectedModelIds}
+          onValuesChange={handleValueChange}
+        >
           <MultiSelectTrigger className="w-full max-w-100">
             <MultiSelectValue placeholder="Select models" />
           </MultiSelectTrigger>
