@@ -27,12 +27,12 @@ export function Compare() {
         onChange={setSelectedModelIds}
       />
 
-      {isModelsPending && (
-        <CompareMessage message="Loading models..." />
-      )}
+      {isModelsPending && <CompareMessage message="Loading models..." />}
 
       {modelsError && (
-        <CompareMessage message={`Failed to load models: ${modelsError.message}`} />
+        <CompareMessage
+          message={`Failed to load models: ${modelsError.message}`}
+        />
       )}
 
       {selectedModelIds.length === 0 && !isModelsPending && (

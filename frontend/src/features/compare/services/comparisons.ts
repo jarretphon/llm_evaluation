@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/services/api/client"
+import { apiClient } from "@/services/api/client"
 import type {
   ComparisonRead,
   ComparisonRequest,
@@ -8,21 +8,14 @@ export const comparisonService = {
   compareModels: async (
     comparisonRequest: ComparisonRequest
   ): Promise<ComparisonRead> => {
-    const response = await fetch(`${BASE_URL}/comparisons`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(comparisonRequest),
+    const { data, error } = await apiClient.POST("/comparisons", {
+      body: comparisonRequest,
     })
 
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => undefined)
-      const errorMessage = errorBody?.detail ?? "Failed to compare models."
-
-      throw new Error(errorMessage)
+    if (error) {
+      throw new Error("Failed to compare models")
     }
 
-    return response.json()
+    return data
   },
 }

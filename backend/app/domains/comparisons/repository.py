@@ -1,14 +1,26 @@
 import uuid
-
-from sqlalchemy.orm import selectinload
-from sqlmodel import Session, select
+from dataclasses import dataclass
 
 from app.domains.evaluations.models import (
+    BenchmarkModel,
     EvaluationMetadata,
     EvaluationModel,
     EvaluationStatus,
+    MetricModel,
 )
 from app.domains.llms.models import LLMModel
+from sqlalchemy import desc, func
+from sqlmodel import Session, select
+
+
+@dataclass(frozen=True)
+class ComparisonMetricRow:
+    model_id: uuid.UUID
+    model_name: str
+    evaluation_id: uuid.UUID
+    benchmark_name: str
+    metric_name: str
+    value: float
 
 
 class ComparisonRepository:
@@ -22,30 +34,77 @@ class ComparisonRepository:
         statement = select(LLMModel).where(LLMModel.id.in_(model_ids))
         return list(self.session.exec(statement).all())
 
-    def list_completed_evaluations_for_models(
+    def list_latest_evaluation_metric_rows(
         self, model_ids: list[uuid.UUID]
-    ) -> list[EvaluationModel]:
+    ) -> list[ComparisonMetricRow]:
         if not model_ids:
             return []
 
-        statement = (
-            select(EvaluationModel)
-            .join(
-                EvaluationMetadata,
-                EvaluationMetadata.evaluation_id == EvaluationModel.id,
+        # Fetch the latest completed evaluation for each requested model
+        ordered_evaluations = (
+            select(
+                EvaluationModel.id.label("evaluation_id"),
+                func.row_number()
+                .over(
+                    partition_by=EvaluationModel.llm_id,
+                    order_by=(
+                        EvaluationMetadata.completed_at.desc().nullslast(),
+                        EvaluationMetadata.started_at.desc(),
+                    ),
+                )
+                .label("rank"),
             )
             .where(
                 EvaluationModel.llm_id.in_(model_ids),
                 EvaluationModel.status == EvaluationStatus.COMPLETED,
             )
-            .options(
-                selectinload(EvaluationModel.metadata_entry),
-                selectinload(EvaluationModel.benchmarks),
+            .subquery()
+        )
+
+        # Fetch the metrics for the latest completed evaluations
+        # Metrics are ordered by benchmark name, metric name, and value (descending)
+        statement = (
+            select(
+                LLMModel.id,
+                LLMModel.name,
+                EvaluationModel.id,
+                BenchmarkModel.name,
+                MetricModel.name,
+                MetricModel.value,
+            )
+            .join(
+                ordered_evaluations,
+                ordered_evaluations.c.evaluation_id == EvaluationModel.id,
+            )
+            .join(LLMModel, LLMModel.id == EvaluationModel.llm_id)
+            .join(BenchmarkModel, BenchmarkModel.evaluation_id == EvaluationModel.id)
+            .join(MetricModel, MetricModel.benchmark_id == BenchmarkModel.id)
+            .where(
+                ordered_evaluations.c.rank == 1,
+                MetricModel.value.is_not(None),
             )
             .order_by(
-                EvaluationModel.llm_id,
-                EvaluationMetadata.completed_at.desc().nullslast(),
-                EvaluationMetadata.started_at.desc(),
+                BenchmarkModel.name,
+                MetricModel.name,
+                desc(MetricModel.value),
             )
         )
-        return list(self.session.exec(statement).all())
+
+        return [
+            ComparisonMetricRow(
+                model_id=model_id,
+                model_name=model_name,
+                evaluation_id=evaluation_id,
+                benchmark_name=benchmark_name,
+                metric_name=metric_name,
+                value=value,
+            )
+            for (
+                model_id,
+                model_name,
+                evaluation_id,
+                benchmark_name,
+                metric_name,
+                value,
+            ) in self.session.exec(statement).all()
+        ]

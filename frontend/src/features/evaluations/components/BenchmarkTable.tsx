@@ -13,38 +13,15 @@ import type { components } from "@/types/schema"
 
 type EvaluationRead = components["schemas"]["EvaluationRead"]
 type BenchmarkRead = components["schemas"]["BenchmarkRead"]
-type BenchmarkResultValue = string | number | boolean | null
-type MetricResults = Record<string, BenchmarkResultValue>
-export type BenchmarkTableBenchmark = Omit<BenchmarkRead, "results"> & {
-  results: Record<string, BenchmarkResultValue>
-}
-export type BenchmarkTableEvaluation = Omit<EvaluationRead, "benchmarks"> & {
-  benchmarks: BenchmarkTableBenchmark[]
-}
+type BenchmarkMetricRead = components["schemas"]["BenchmarkMetricRead"]
+export type BenchmarkTableBenchmark = BenchmarkRead
 
-const isStderrMetric = (metricName: string) => metricName.includes("stderr")
+const formatMetricValue = (value: number | null | undefined) => {
+  if (value === null || value === undefined) {
+    return "—"
+  }
 
-// const getStderrMetricValue = (
-//   metricResults: MetricResults,
-//   metricName: string
-// ) => {
-//   const metricParts = metricName.split(",")
-//   const possibleStderrMetricNames = [
-//     `${metricName},stderr`,
-//     `${metricName}_stderr`,
-//     metricParts.length > 1
-//       ? `${metricParts[0]}_stderr,${metricParts.slice(1).join(",")}`
-//       : undefined,
-//   ].filter(Boolean) as string[]
-
-//   return possibleStderrMetricNames
-//     .map((stderrMetricName) => metricResults[stderrMetricName])
-//     .find((metricValue) => metricValue !== undefined)
-// }
-
-const getStderrValue = (metricName: string, metricResults: MetricResults) => {
-  const key = metricName + ",stderr"
-  return metricResults[key]
+  return Number.isInteger(value) ? value.toString() : value.toPrecision(4)
 }
 
 export function BenchmarkTable({
@@ -57,15 +34,14 @@ export function BenchmarkTable({
   const { benchmarkRows, metricNames } = useMemo(() => {
     const metricNameSet = new Set<string>()
     const rows = evaluation.benchmarks.map((benchmark) => {
-      const metricResults = benchmark.results
+      const metricsByName = new Map<string, BenchmarkMetricRead>()
 
-      Object.entries(metricResults).forEach(([metricName, _]) => {
-        if (!isStderrMetric(metricName)) {
-          metricNameSet.add(metricName)
-        }
+      benchmark.metrics.forEach((metric) => {
+        metricNameSet.add(metric.name)
+        metricsByName.set(metric.name, metric)
       })
 
-      return { benchmark, metricResults }
+      return { benchmark, metricsByName }
     })
 
     return {
@@ -93,7 +69,7 @@ export function BenchmarkTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {benchmarkRows.map(({ benchmark, metricResults }) => (
+          {benchmarkRows.map(({ benchmark, metricsByName }) => (
             <TableRow key={benchmark.id}>
               <TableCell className="max-w-64 truncate font-medium">
                 {benchmark.name}
@@ -102,21 +78,18 @@ export function BenchmarkTable({
                 {benchmark.status}
               </TableCell>
               {metricNames.map((metricName) => {
-                const stderrMetricValue = getStderrValue(
-                  metricName,
-                  metricResults
-                )
+                const metric = metricsByName.get(metricName)
 
                 return (
                   <TableCell
                     key={metricName}
                     className="text-right whitespace-nowrap text-muted-foreground"
                   >
-                    {metricResults[metricName]}
-                    {stderrMetricValue !== undefined && (
+                    {formatMetricValue(metric?.value)}
+                    {metric?.stderr !== null && metric?.stderr !== undefined && (
                       <span className="text-xs text-muted-foreground/70">
                         {" "}
-                        ± {stderrMetricValue}
+                        ± {formatMetricValue(metric.stderr)}
                       </span>
                     )}
                   </TableCell>

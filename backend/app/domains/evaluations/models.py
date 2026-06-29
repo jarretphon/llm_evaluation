@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Optional
 
 from sqlalchemy import DateTime
-from sqlmodel import JSON, Column, Field, Relationship, SQLModel
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 def utc_now() -> datetime:
@@ -54,7 +54,6 @@ class EvaluationMetadata(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     progress: float = Field(default=0.0)
-    evaluation_status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="metadata_entry")
 
@@ -67,8 +66,20 @@ class BenchmarkModel(SQLModel, table=True):
     name: str
     description: str = Field(default="")
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
-    results: dict[str, str] = Field(
-        default_factory=dict, sa_column=Column(JSON, nullable=False)
+    metrics: list["MetricModel"] = Relationship(
+        back_populates="benchmark_entry", cascade_delete=True
     )
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="benchmarks")
+
+
+class MetricModel(SQLModel, table=True):
+    __tablename__ = "benchmark_metrics"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    benchmark_id: uuid.UUID = Field(foreign_key="benchmarks.id", ondelete="CASCADE")
+    name: str
+    value: float | None = Field(default=None)
+    stderr: float | None = Field(default=None)
+
+    benchmark_entry: "BenchmarkModel" = Relationship(back_populates="metrics")

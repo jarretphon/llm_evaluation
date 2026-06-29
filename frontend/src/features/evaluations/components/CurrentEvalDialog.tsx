@@ -95,7 +95,6 @@ const formatStatus = (status: string) => {
 //   metadata_entry: {
 //     started_at: "sdafsdafdsaf",
 //     duration: 100,
-//     evaluation_status: "running",
 //     completed_at: "adfads",
 //     estimated_end_time: "asdfafd",
 //   },
@@ -122,7 +121,7 @@ export function CurrentEvalDialog({
 
     const metadata = activeEvaluation.metadata_entry
     const progress = metadata.progress ?? 0
-    const status = metadata.evaluation_status
+    const status = activeEvaluation.status
     const isTerminalStatus = terminalStatuses.has(status)
     const isIncomplete = !isTerminalStatus && progress < 100
     const title = model?.endpoint ?? activeEvaluation.id

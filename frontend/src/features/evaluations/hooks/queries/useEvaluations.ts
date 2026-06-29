@@ -17,7 +17,7 @@ export function useGetEvaluations() {
       const evaluations = query.state.data ?? []
       const hasIncompleteEvaluation = evaluations.some((evaluation) => {
         const progress = evaluation.metadata_entry.progress ?? 0
-        const status = evaluation.metadata_entry.evaluation_status
+        const status = evaluation.status
 
         return progress < 100 && (status === "running" || status === "queued")
       })
@@ -41,7 +41,7 @@ export function useGetEvaluationById({
     refetchInterval: (query) => {
       const evaluation = query.state.data
       const progress = evaluation?.metadata_entry.progress ?? 0
-      const status = evaluation?.metadata_entry.evaluation_status
+      const status = evaluation?.status
       const isIncomplete = progress < 100
       const isRunningOrQueued = status === "running" || status === "queued"
 

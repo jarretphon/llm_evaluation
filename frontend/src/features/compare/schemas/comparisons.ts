@@ -1,27 +1,8 @@
-export type ComparisonRequest = {
-  model_ids: string[]
-}
+import type { components } from "@/types/schema"
 
-export type ComparisonModel = {
-  id: string
-  name: string
-  provider: string
-  latest_evaluation_id: string | null
-}
-
-export type ComparisonValue = {
-  model_id: string
-  metric: string
-  value: number | null
-}
-
-export type ComparisonBenchmark = {
-  name: string
-  metrics: string[]
-  values: ComparisonValue[]
-}
-
-export type ComparisonRead = {
-  models: ComparisonModel[]
-  benchmarks: ComparisonBenchmark[]
-}
+export type ComparisonRequest = components["schemas"]["ComparisonRequest"]
+export type ComparisonModel = components["schemas"]["ComparisonModelRead"]
+export type ComparisonValue = components["schemas"]["ComparisonValueRead"]
+export type ComparisonBenchmark =
+  components["schemas"]["ComparisonBenchmarkRead"]
+export type ComparisonRead = components["schemas"]["ComparisonRead"]

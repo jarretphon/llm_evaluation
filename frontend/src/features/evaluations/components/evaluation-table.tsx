@@ -85,7 +85,7 @@ const FilterTabs = ({
 }
 
 const getEvaluationStatus = (record: EvaluationRead): EvaluationStatus => {
-  return record.metadata_entry.evaluation_status as EvaluationStatus
+  return record.status as EvaluationStatus
 }
 
 export function EvaluationTable() {

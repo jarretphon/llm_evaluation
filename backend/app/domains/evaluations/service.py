@@ -1,12 +1,11 @@
+import math
 import uuid
 from datetime import UTC, datetime
-
-import pandas as pd
-import numpy as np
-
 from functools import lru_cache
 
 import lm_eval
+import numpy as np
+import pandas as pd
 from app.domains.evaluations.errors import (
     EvaluationNotFoundError,
     NoBenchmarksSelectedError,
@@ -16,6 +15,7 @@ from app.domains.evaluations.models import (
     EvaluationMetadata,
     EvaluationModel,
     EvaluationStatus,
+    MetricModel,
     utc_now,
 )
 from app.domains.evaluations.repository import EvaluationRepository
@@ -23,7 +23,6 @@ from app.domains.evaluations.schemas import EvaluationCreate
 from app.domains.evaluations.traversal import get_root_groups
 from app.domains.evaluations.utils import get_group_tasks, require_completions
 from lm_eval.tasks import TaskManager
-
 
 DEFAULT_EVALUATION_MODEL_NAME = "default"
 
@@ -59,9 +58,10 @@ class EvaluationService:
         evaluation = EvaluationModel(
             llm_id=evaluation_create.model_id,
             metadata_entry=EvaluationMetadata(),
-            benchmarks= [
-                BenchmarkModel(name=benchmark) for benchmark in evaluation_create.benchmarks
-            ]
+            benchmarks=[
+                BenchmarkModel(name=benchmark)
+                for benchmark in evaluation_create.benchmarks
+            ],
         )
 
         self.repository.create_evaluation(evaluation)
@@ -76,7 +76,7 @@ class EvaluationService:
 
     def run_registered_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
         evaluation = self.get_evaluation(evaluation_id)
-       
+
         model_endpoint = evaluation.llm_entry.endpoint
         model_name = DEFAULT_EVALUATION_MODEL_NAME
         benchmark_tasks = [
@@ -98,29 +98,29 @@ class EvaluationService:
                     eval_results = self._run_lm_eval(
                         base_url=model_endpoint,
                         model_name=model_name,
-                        task=task
+                        task=task,
                     )
                 except Exception as e:
                     print(
                         f"Error occurred while running LM eval for benchmark {benchmark.name}: {e}"
                     )
-                    benchmark_results[task] = {"error": True, "results": {}} 
+                    benchmark_results[task] = {"error": True, "results": {}}
                 else:
                     benchmark_results[task] = {
                         "error": False,
                         "results": eval_results.get("results", {}).get(task, {}),
                     }
-            
+
                 num_tasks_evaluated += 1
                 self._update_evaluation_progress(
                     evaluation, total_tasks, num_tasks_evaluated
                 )
-             
+
             status, aggregate_results = self.aggregate_results(benchmark_results)
             self._set_status(benchmark, status)
-            benchmark.results = aggregate_results
+            benchmark.metrics = self._build_benchmark_metrics(aggregate_results)
 
-        final_status = self._get_final_evaluation_status(evaluation.benchmarks)
+        final_status = self._get_final_status(evaluation.benchmarks)
         self._complete_evaluation(evaluation, final_status)
         self.repository.save_evaluation(evaluation)
 
@@ -151,8 +151,6 @@ class EvaluationService:
         self, model: EvaluationModel | BenchmarkModel, status: EvaluationStatus
     ) -> None:
         model.status = status
-        if isinstance(model, EvaluationModel):
-            model.metadata_entry.evaluation_status = status
 
     def _complete_evaluation(
         self, evaluation: EvaluationModel, status: EvaluationStatus
@@ -172,9 +170,7 @@ class EvaluationService:
 
         return value.astimezone(UTC)
 
-    def _get_final_evaluation_status(
-        self, benchmarks: list[BenchmarkModel]
-    ) -> EvaluationStatus:
+    def _get_final_status(self, benchmarks: list[BenchmarkModel]) -> EvaluationStatus:
         if not benchmarks:
             return EvaluationStatus.COMPLETED
 
@@ -196,7 +192,7 @@ class EvaluationService:
         total: int,
         num_evaluated: int,
     ) -> None:
-        progress = round((num_evaluated / total) * 100)
+        progress = 100 if total == 0 else round((num_evaluated / total) * 100)
         evaluation.metadata_entry.progress = progress
         self.repository.save_evaluation(evaluation)
 
@@ -206,9 +202,7 @@ class EvaluationService:
             subtasks.extend(get_group_tasks(group_name, self.get_task_manager()))
         return subtasks
 
-
     def aggregate_results(self, results: dict[str, dict]) -> dict:
-       
         any_failed = any(result["error"] for result in results.values())
         all_failed = all(result["error"] for result in results.values())
 
@@ -220,16 +214,66 @@ class EvaluationService:
             status = EvaluationStatus.COMPLETED
 
         valid_records = [v["results"] for v in results.values() if not v["error"]]
+        if not valid_records:
+            return status, {}
+
         df = pd.DataFrame(valid_records)
         total_tasks = len(df)
 
         stderr_cols = [col for col in df.columns if col.endswith(",stderr")]
         score_cols = [col for col in df.columns if col not in stderr_cols]
+        numeric_df = df.apply(pd.to_numeric, errors="coerce")
 
-        aggregated_scores = df[score_cols].mean()
-        aggregated_stderrs = np.sqrt((df[stderr_cols] ** 2).sum(axis=0)) / total_tasks
-        
-        final_results = pd.concat([aggregated_scores, aggregated_stderrs]).round(5).to_dict()
-        
+        aggregated_scores = numeric_df[score_cols].mean()
+        aggregated_stderrs = (
+            np.sqrt((numeric_df[stderr_cols] ** 2).sum(axis=0, min_count=1))
+            / total_tasks
+            if stderr_cols
+            else pd.Series(dtype=float)
+        )
+
+        final_results = (
+            pd.concat([aggregated_scores, aggregated_stderrs]).round(5).to_dict()
+        )
+
         return status, final_results
-        
+
+    def _build_benchmark_metrics(self, aggregate_results: dict) -> list[MetricModel]:
+        metrics = []
+
+        for metric_name, metric_value in aggregate_results.items():
+            if self._is_stderr_metric(metric_name):
+                continue
+
+            value = self._to_number(metric_value)
+            if value is None:
+                continue
+
+            metrics.append(
+                MetricModel(
+                    name=metric_name,
+                    value=value,
+                    stderr=self._to_number(
+                        aggregate_results.get(self._stderr_metric_name(metric_name))
+                    ),
+                )
+            )
+
+        return metrics
+
+    def _is_stderr_metric(self, metric_name: str) -> bool:
+        return metric_name.endswith(",stderr")
+
+    def _stderr_metric_name(self, metric_name: str) -> str:
+        return f"{metric_name},stderr"
+
+    def _to_number(self, value) -> float | None:
+        if value is None or isinstance(value, bool):
+            return None
+
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+
+        return number if math.isfinite(number) else None

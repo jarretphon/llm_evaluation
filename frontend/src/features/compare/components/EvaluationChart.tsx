@@ -91,29 +91,17 @@ function MetricChart({
   metric: string
   models: ComparisonModel[]
 }) {
-  const { chartData, missingModelNames } = useMemo(() => {
-    const valuesByModelId = new Map(
-      benchmark.values
-        .filter((value) => value.metric === metric)
-        .map((value) => [value.model_id, value.value])
+  const chartData = useMemo(() => {
+    const modelNamesById = new Map(
+      models.map((model) => [model.id, model.name])
     )
 
-    const rows = models.map((model) => {
-      const value = valuesByModelId.get(model.id) ?? null
-
-      return {
-        model: model.name,
-        value,
-      }
-    })
-    const missingNames = rows
-      .filter((row) => row.value === null)
-      .map((row) => row.model)
-
-    return {
-      chartData: rows,
-      missingModelNames: missingNames,
-    }
+    return benchmark.values
+      .filter((value) => value.metric === metric)
+      .map((value) => ({
+        model: modelNamesById.get(value.model_id) ?? value.model_id,
+        value: value.value,
+      }))
   }, [benchmark.values, metric, models])
 
   return (
@@ -147,12 +135,6 @@ function MetricChart({
           />
         </BarChart>
       </ChartContainer>
-
-      {missingModelNames.length > 0 && (
-        <p className="text-xs text-white/50">
-          No value: {missingModelNames.join(", ")}
-        </p>
-      )}
     </TabsContent>
   )
 }

@@ -10,7 +10,6 @@ class ComparisonRequest(BaseModel):
 class ComparisonModelRead(BaseModel):
     id: uuid.UUID
     name: str
-    provider: str
     latest_evaluation_id: uuid.UUID | None = None
 
 

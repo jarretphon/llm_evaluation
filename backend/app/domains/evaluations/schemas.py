@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Dict
 
 from pydantic import BaseModel
 
@@ -13,17 +12,23 @@ class BenchmarkCreate(BenchmarkBase):
     pass
 
 
+class BenchmarkMetricRead(BaseModel):
+    id: uuid.UUID
+    name: str
+    value: float | None = None
+    stderr: float | None = None
+
+
 class BenchmarkRead(BenchmarkBase):
     id: uuid.UUID
     description: str
     status: str
-    results: Dict[str, str]
+    metrics: list[BenchmarkMetricRead]
 
 
 class EvaluationMetadata(BaseModel):
     started_at: datetime
     duration: float
-    evaluation_status: str
     completed_at: datetime | None = None
     estimated_end_time: datetime | None = None
     progress: float | None = None
@@ -42,5 +47,6 @@ class EvaluationCreate(EvaluationBase):
 
 class EvaluationRead(EvaluationBase):
     id: uuid.UUID
+    status: str
     metadata_entry: EvaluationMetadata
     benchmarks: list[BenchmarkRead]

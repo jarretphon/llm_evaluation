@@ -129,6 +129,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/comparisons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare Models */
+        post: operations["compare_models_comparisons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/": {
         parameters: {
             query?: never;
@@ -150,6 +167,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BenchmarkMetricRead */
+        BenchmarkMetricRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Value */
+            value?: number | null;
+            /** Stderr */
+            stderr?: number | null;
+        };
         /** BenchmarkRead */
         BenchmarkRead: {
             /** Name */
@@ -163,10 +194,53 @@ export interface components {
             description: string;
             /** Status */
             status: string;
-            /** Results */
-            results: {
-                [key: string]: string;
-            };
+            /** Metrics */
+            metrics: components["schemas"]["BenchmarkMetricRead"][];
+        };
+        /** ComparisonBenchmarkRead */
+        ComparisonBenchmarkRead: {
+            /** Name */
+            name: string;
+            /** Metrics */
+            metrics: string[];
+            /** Values */
+            values: components["schemas"]["ComparisonValueRead"][];
+        };
+        /** ComparisonModelRead */
+        ComparisonModelRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Latest Evaluation Id */
+            latest_evaluation_id?: string | null;
+        };
+        /** ComparisonRead */
+        ComparisonRead: {
+            /** Models */
+            models: components["schemas"]["ComparisonModelRead"][];
+            /** Benchmarks */
+            benchmarks: components["schemas"]["ComparisonBenchmarkRead"][];
+        };
+        /** ComparisonRequest */
+        ComparisonRequest: {
+            /** Model Ids */
+            model_ids?: string[];
+        };
+        /** ComparisonValueRead */
+        ComparisonValueRead: {
+            /**
+             * Model Id
+             * Format: uuid
+             */
+            model_id: string;
+            /** Metric */
+            metric: string;
+            /** Value */
+            value?: number | null;
         };
         /** EvaluationCreate */
         EvaluationCreate: {
@@ -194,8 +268,6 @@ export interface components {
             started_at: string;
             /** Duration */
             duration: number;
-            /** Evaluation Status */
-            evaluation_status: string;
             /** Completed At */
             completed_at?: string | null;
             /** Estimated End Time */
@@ -212,6 +284,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Status */
+            status: string;
             metadata_entry: components["schemas"]["EvaluationMetadata"];
         };
         /** HTTPValidationError */
@@ -700,6 +774,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvaluationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_models_comparisons_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComparisonRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonRead"];
                 };
             };
             /** @description Validation Error */
