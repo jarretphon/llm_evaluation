@@ -1,6 +1,6 @@
 import uuid
-from dataclasses import dataclass
 
+from app.domains.comparisons.schemas import MetricRow
 from app.domains.evaluations.models import (
     BenchmarkModel,
     EvaluationMetadata,
@@ -11,16 +11,6 @@ from app.domains.evaluations.models import (
 from app.domains.llms.models import LLMModel
 from sqlalchemy import desc, func
 from sqlmodel import Session, select
-
-
-@dataclass(frozen=True)
-class ComparisonMetricRow:
-    model_id: uuid.UUID
-    model_name: str
-    evaluation_id: uuid.UUID
-    benchmark_name: str
-    metric_name: str
-    value: float
 
 
 class ComparisonRepository:
@@ -34,9 +24,9 @@ class ComparisonRepository:
         statement = select(LLMModel).where(LLMModel.id.in_(model_ids))
         return list(self.session.exec(statement).all())
 
-    def list_latest_evaluation_metric_rows(
+    def get_latest_evaluation_metrics(
         self, model_ids: list[uuid.UUID]
-    ) -> list[ComparisonMetricRow]:
+    ) -> list[MetricRow]:
         if not model_ids:
             return []
 
@@ -65,9 +55,8 @@ class ComparisonRepository:
         # Metrics are ordered by benchmark name, metric name, and value (descending)
         statement = (
             select(
-                LLMModel.id,
+                EvaluationModel.llm_id,
                 LLMModel.name,
-                EvaluationModel.id,
                 BenchmarkModel.name,
                 MetricModel.name,
                 MetricModel.value,
@@ -90,21 +79,4 @@ class ComparisonRepository:
             )
         )
 
-        return [
-            ComparisonMetricRow(
-                model_id=model_id,
-                model_name=model_name,
-                evaluation_id=evaluation_id,
-                benchmark_name=benchmark_name,
-                metric_name=metric_name,
-                value=value,
-            )
-            for (
-                model_id,
-                model_name,
-                evaluation_id,
-                benchmark_name,
-                metric_name,
-                value,
-            ) in self.session.exec(statement).all()
-        ]
+        return self.session.exec(statement).all()

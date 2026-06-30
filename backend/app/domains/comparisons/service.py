@@ -1,14 +1,13 @@
 import uuid
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from app.domains.comparisons.errors import ComparisonModelNotFoundError
-from app.domains.comparisons.repository import ComparisonMetricRow, ComparisonRepository
+from app.domains.comparisons.repository import ComparisonRepository
 from app.domains.comparisons.schemas import (
-    ComparisonBenchmarkRead,
-    ComparisonModelRead,
     ComparisonRead,
     ComparisonRequest,
-    ComparisonValueRead,
+    MetricRow,
+    ModelMetricResults,
 )
 
 
@@ -19,12 +18,9 @@ class ComparisonService:
     def compare_models(self, comparison_request: ComparisonRequest) -> ComparisonRead:
         model_ids = self._dedupe_model_ids(comparison_request.model_ids)
         self._validate_models_exist(model_ids)
-        metric_rows = self.repository.list_latest_evaluation_metric_rows(model_ids)
+        metric_rows = self.repository.get_latest_evaluation_metrics(model_ids)
 
-        return ComparisonRead(
-            models=self._build_comparison_models(metric_rows),
-            benchmarks=self._build_comparison_benchmarks(metric_rows),
-        )
+        return self._build_comparison_benchmarks(metric_rows)
 
     def _dedupe_model_ids(self, model_ids: list[uuid.UUID]) -> list[uuid.UUID]:
         return list(OrderedDict.fromkeys(model_ids))
@@ -37,46 +33,17 @@ class ComparisonService:
             if model_id not in models_by_id:
                 raise ComparisonModelNotFoundError(model_id)
 
-    def _build_comparison_models(
-        self, metric_rows: list[ComparisonMetricRow]
-    ) -> list[ComparisonModelRead]:
-        models_by_id: OrderedDict[uuid.UUID, ComparisonModelRead] = OrderedDict()
-
-        for row in metric_rows:
-            models_by_id.setdefault(
-                row.model_id,
-                ComparisonModelRead(
-                    id=row.model_id,
-                    name=row.model_name,
-                    latest_evaluation_id=row.evaluation_id,
-                ),
-            )
-
-        return list(models_by_id.values())
-
     def _build_comparison_benchmarks(
-        self, metric_rows: list[ComparisonMetricRow]
-    ) -> list[ComparisonBenchmarkRead]:
-        benchmark_metrics: OrderedDict[str, OrderedDict[str, None]] = OrderedDict()
-        benchmark_values: OrderedDict[str, list[ComparisonValueRead]] = OrderedDict()
-
-        for row in metric_rows:
-            benchmark_metrics.setdefault(row.benchmark_name, OrderedDict()).setdefault(
-                row.metric_name, None
-            )
-            benchmark_values.setdefault(row.benchmark_name, []).append(
-                ComparisonValueRead(
-                    model_id=row.model_id,
-                    metric=row.metric_name,
-                    value=row.value,
+        self, metric_rows: list[MetricRow]
+    ) -> ComparisonRead:
+        results = defaultdict(lambda: defaultdict(list))
+        for model_id, model_name, benchmark_name, metric_name, value in metric_rows:
+            results[benchmark_name][metric_name].append(
+                ModelMetricResults(
+                    model_id=model_id,
+                    model_name=model_name,
+                    value=value,
                 )
             )
 
-        return [
-            ComparisonBenchmarkRead(
-                name=benchmark_name,
-                metrics=list(metrics),
-                values=benchmark_values[benchmark_name],
-            )
-            for benchmark_name, metrics in benchmark_metrics.items()
-        ]
+        return ComparisonRead.model_validate(results)

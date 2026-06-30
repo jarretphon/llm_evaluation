@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { EvaluationChart } from "@/features/compare/components/EvaluationChart"
+import { BenchmarkChart } from "@/features/compare/components/BenchmarkChart"
 import { ModelMultiSelect } from "@/features/compare/components/ModelMultiSelect"
 import { useCompareModels } from "@/features/compare/hooks/queries/useComparisons"
 import { useGetModels } from "@/features/models/hooks/queries/useModels"
@@ -18,6 +18,8 @@ export function Compare() {
     isFetching: isComparisonFetching,
     error: comparisonError,
   } = useCompareModels(selectedModelIds)
+
+  const comparisonBenchmarks = Object.entries(comparison ?? {})
 
   return (
     <div className="flex h-full w-full flex-col gap-6 p-4 text-white md:p-6">
@@ -49,17 +51,17 @@ export function Compare() {
         />
       )}
 
-      {comparison && comparison.benchmarks.length === 0 && (
+      {comparison && comparisonBenchmarks.length === 0 && (
         <CompareMessage message="No completed benchmark results were found for the selected models." />
       )}
 
-      {comparison && comparison.benchmarks.length > 0 && (
+      {comparisonBenchmarks.length > 0 && (
         <div className="grid gap-4 xl:grid-cols-2">
-          {comparison.benchmarks.map((benchmark) => (
-            <EvaluationChart
-              key={benchmark.name}
-              benchmark={benchmark}
-              models={comparison.models}
+          {comparisonBenchmarks.map(([benchmarkName, metrics]) => (
+            <BenchmarkChart
+              key={benchmarkName}
+              benchmarkName={benchmarkName}
+              metrics={metrics}
             />
           ))}
         </div>

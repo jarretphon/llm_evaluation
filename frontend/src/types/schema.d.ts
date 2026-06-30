@@ -197,50 +197,16 @@ export interface components {
             /** Metrics */
             metrics: components["schemas"]["BenchmarkMetricRead"][];
         };
-        /** ComparisonBenchmarkRead */
-        ComparisonBenchmarkRead: {
-            /** Name */
-            name: string;
-            /** Metrics */
-            metrics: string[];
-            /** Values */
-            values: components["schemas"]["ComparisonValueRead"][];
-        };
-        /** ComparisonModelRead */
-        ComparisonModelRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string;
-            /** Latest Evaluation Id */
-            latest_evaluation_id?: string | null;
-        };
         /** ComparisonRead */
         ComparisonRead: {
-            /** Models */
-            models: components["schemas"]["ComparisonModelRead"][];
-            /** Benchmarks */
-            benchmarks: components["schemas"]["ComparisonBenchmarkRead"][];
+            [key: string]: {
+                [key: string]: components["schemas"]["ModelMetricResults"][];
+            };
         };
         /** ComparisonRequest */
         ComparisonRequest: {
             /** Model Ids */
             model_ids?: string[];
-        };
-        /** ComparisonValueRead */
-        ComparisonValueRead: {
-            /**
-             * Model Id
-             * Format: uuid
-             */
-            model_id: string;
-            /** Metric */
-            metric: string;
-            /** Value */
-            value?: number | null;
         };
         /** EvaluationCreate */
         EvaluationCreate: {
@@ -343,6 +309,18 @@ export interface components {
             provider?: string | null;
             /** Api Key */
             api_key?: string | null;
+        };
+        /** ModelMetricResults */
+        ModelMetricResults: {
+            /**
+             * Model Id
+             * Format: uuid
+             */
+            model_id: string;
+            /** Model Name */
+            model_name: string;
+            /** Value */
+            value: number | null;
         };
         /** UserCreate */
         UserCreate: {

@@ -1,30 +1,24 @@
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
+
+ModelName, BenchmarkName, MetricName = str, str, str
+MetricRow = tuple[uuid.UUID, ModelName, BenchmarkName, MetricName, float]
+
+
+class ModelMetricResults(BaseModel):
+    model_id: uuid.UUID
+    model_name: str
+    value: float | None
+
+
+BenchmarkMetrics = dict[MetricName, list[ModelMetricResults]]
+ComparisonBenchmarks = dict[BenchmarkName, BenchmarkMetrics]
 
 
 class ComparisonRequest(BaseModel):
     model_ids: list[uuid.UUID] = Field(default_factory=list)
 
 
-class ComparisonModelRead(BaseModel):
-    id: uuid.UUID
-    name: str
-    latest_evaluation_id: uuid.UUID | None = None
-
-
-class ComparisonValueRead(BaseModel):
-    model_id: uuid.UUID
-    metric: str
-    value: float | None = None
-
-
-class ComparisonBenchmarkRead(BaseModel):
-    name: str
-    metrics: list[str]
-    values: list[ComparisonValueRead]
-
-
-class ComparisonRead(BaseModel):
-    models: list[ComparisonModelRead]
-    benchmarks: list[ComparisonBenchmarkRead]
+class ComparisonRead(RootModel[ComparisonBenchmarks]):
+    pass
