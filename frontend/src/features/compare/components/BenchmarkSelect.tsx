@@ -8,29 +8,35 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
-import type { components } from "@/types/schema"
+import { useGetModels } from "@/features/models/hooks/queries/useModels"
 
-type Model = Pick<components["schemas"]["LLMRead"], "id" | "name">
-
-type ModelMultiSelectProps = {
-  models: Model[]
+type BenchmarkSelectProps = {
   selectedModelIds: string[]
   onChange: (modelIds: string[]) => void
   maxSelected?: number
 }
 
-export function ModelMultiSelect({
-  models,
+export function BenchmarkSelect({
   selectedModelIds,
   onChange,
   maxSelected = 5,
-}: ModelMultiSelectProps) {
+}: BenchmarkSelectProps) {
   const handleValueChange = (nextModelIds: string[]) => {
     onChange(nextModelIds.slice(0, maxSelected))
   }
 
+  const { data, isPending, error } = useGetModels()
+
+  if (isPending) {
+    return <div>Loading models...</div>
+  }
+
+  if (error) {
+    return <div>Error loading models: {error.message}</div>
+  }
+
   return (
-    <Card className="border border-border/60 bg-[#151515] text-white">
+    <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
       <CardHeader className="gap-2">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-lg text-white">
@@ -51,7 +57,7 @@ export function ModelMultiSelect({
           </MultiSelectTrigger>
           <MultiSelectContent>
             <MultiSelectGroup>
-              {models.map((model) => (
+              {data.map((model) => (
                 <MultiSelectItem key={model.id} value={model.id}>
                   {model.name}
                 </MultiSelectItem>
