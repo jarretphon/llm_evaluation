@@ -66,6 +66,7 @@ class BenchmarkModel(SQLModel, table=True):
     name: str
     description: str = Field(default="")
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
+    effective_sample_count: int = Field(default=0)
     metrics: list["MetricModel"] = Relationship(
         back_populates="benchmark_entry", cascade_delete=True
     )

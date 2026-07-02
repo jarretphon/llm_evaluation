@@ -168,10 +168,9 @@ def require_completions(task_name):
 
 #     return sub_tasks
 
+
 def get_group_tasks(
-    group_name: str, 
-    task_manager: TaskManager, 
-    memo: dict[str, list[str]] = None
+    group_name: str, task_manager: TaskManager, memo: dict[str, list[str]] = None
 ) -> list[str]:
     """Recursively get leaf tasks for a given group, optimized with memoization."""
     if memo is None:
@@ -298,5 +297,3 @@ def get_standalone_tasks(task_manager: TaskManager) -> list[str]:
 #     else:
 #         # 2. Handles internal base-templates or unpopulated items safely
 #         print(f"Task: {task_name}, output_type: [] (No configuration file loaded)")
-
-

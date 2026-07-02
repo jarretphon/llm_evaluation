@@ -146,6 +146,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/leaderboard/benchmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Leaderboard Benchmark Options */
+        get: operations["get_leaderboard_benchmark_options_leaderboard_benchmarks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get Leaderboard */
+        post: operations["get_leaderboard_leaderboard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/": {
         parameters: {
             query?: never;
@@ -194,6 +228,8 @@ export interface components {
             description: string;
             /** Status */
             status: string;
+            /** Effective Sample Count */
+            effective_sample_count?: number;
             /** Metrics */
             metrics: components["schemas"]["BenchmarkMetricRead"][];
         };
@@ -207,6 +243,51 @@ export interface components {
         ComparisonRequest: {
             /** Model Ids */
             model_ids?: string[];
+        };
+        /** LeaderboardRead */
+        LeaderboardRead: {
+            /** Selected Benchmarks */
+            selected_benchmarks: string[];
+            /** Rows */
+            rows: components["schemas"]["LeaderboardRowRead"][];
+        };
+        /** LeaderboardRequest */
+        LeaderboardRequest: {
+            /** Benchmarks */
+            benchmarks?: string[];
+        };
+        /** LeaderboardRowRead */
+        LeaderboardRowRead: {
+            /** Rank */
+            rank?: number | null;
+            /**
+             * Model Id
+             * Format: uuid
+             */
+            model_id: string;
+            /** Model Name */
+            model_name: string;
+            /** Provider */
+            provider: string;
+            /** Weighted Average */
+            weighted_average?: number | null;
+            /** Completed Benchmark Count */
+            completed_benchmark_count: number;
+            /** Selected Benchmark Count */
+            selected_benchmark_count: number;
+            /** Scores */
+            scores: {
+                [key: string]: components["schemas"]["LeaderboardScoreRead"];
+            };
+        };
+        /** LeaderboardScoreRead */
+        LeaderboardScoreRead: {
+            /** Value */
+            value?: number | null;
+            /** Metric */
+            metric?: string | null;
+            /** Effective Sample Count */
+            effective_sample_count?: number;
         };
         /** EvaluationCreate */
         EvaluationCreate: {
@@ -785,6 +866,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ComparisonRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leaderboard_benchmark_options_leaderboard_benchmarks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string[];
+                    };
+                };
+            };
+        };
+    };
+    get_leaderboard_leaderboard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaderboardRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardRead"];
                 };
             };
             /** @description Validation Error */

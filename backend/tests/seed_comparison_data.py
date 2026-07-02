@@ -125,6 +125,7 @@ def create_completed_evaluation(
                 name=benchmark_name,
                 description=f"Seeded {benchmark_name} benchmark",
                 status=EvaluationStatus.COMPLETED,
+                effective_sample_count=100,
                 metrics=build_metric_models(results),
             )
             for benchmark_name, results in benchmark_results.items()

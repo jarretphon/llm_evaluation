@@ -26,7 +26,7 @@ export function BenchmarkChartGrid({
   return (
     <>
       {comparisonBenchmarks.length > 0 && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-3">
           {comparisonBenchmarks.map(([benchmarkName, metrics]) => (
             <BenchmarkChart
               key={benchmarkName}

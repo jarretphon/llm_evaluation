@@ -1,11 +1,8 @@
-import math
 import uuid
 from datetime import UTC, datetime
 from functools import lru_cache
 
 import lm_eval
-import numpy as np
-import pandas as pd
 from app.domains.evaluations.errors import (
     EvaluationNotFoundError,
     NoBenchmarksSelectedError,
@@ -104,11 +101,18 @@ class EvaluationService:
                     print(
                         f"Error occurred while running LM eval for benchmark {benchmark.name}: {e}"
                     )
-                    benchmark_results[task] = {"error": True, "results": {}}
+                    benchmark_results[task] = {
+                        "error": True,
+                        "results": {},
+                        "effective_sample_count": 0,
+                    }
                 else:
                     benchmark_results[task] = {
                         "error": False,
-                        "results": eval_results.get("results", {}).get(task, {}),
+                        "results": self._get_task_metric_results(eval_results, task),
+                        "effective_sample_count": self._get_effective_sample_count(
+                            eval_results, task
+                        ),
                     }
 
                 num_tasks_evaluated += 1
@@ -118,7 +122,12 @@ class EvaluationService:
 
             status, aggregate_results = self.aggregate_results(benchmark_results)
             self._set_status(benchmark, status)
-            benchmark.metrics = self._build_benchmark_metrics(aggregate_results)
+            benchmark.effective_sample_count = aggregate_results[
+                "total_effective_sample_count"
+            ]
+            benchmark.metrics = self._build_benchmark_metrics(
+                aggregate_results["results"]
+            )
 
         final_status = self._get_final_status(evaluation.benchmarks)
         self._complete_evaluation(evaluation, final_status)
@@ -202,7 +211,9 @@ class EvaluationService:
             subtasks.extend(get_group_tasks(group_name, self.get_task_manager()))
         return subtasks
 
-    def aggregate_results(self, results: dict[str, dict]) -> dict:
+    def aggregate_results(
+        self, results: dict[str, dict]
+    ) -> tuple[EvaluationStatus, dict]:
         any_failed = any(result["error"] for result in results.values())
         all_failed = all(result["error"] for result in results.values())
 
@@ -213,39 +224,44 @@ class EvaluationService:
         else:
             status = EvaluationStatus.COMPLETED
 
-        valid_records = [v["results"] for v in results.values() if not v["error"]]
-        if not valid_records:
-            return status, {}
+        aggregate_results = {
+            "total_effective_sample_count": 0,
+            "results": {},
+        }
 
-        df = pd.DataFrame(valid_records)
-        total_tasks = len(df)
+        # Get weighted average for each metric across all tasks, weighted by effective sample count
+        # Weighted average = sum(value * weight) / sum(weight)
+        for task_result in results.values():
+            if task_result["error"]:
+                continue
 
-        stderr_cols = [col for col in df.columns if col.endswith(",stderr")]
-        score_cols = [col for col in df.columns if col not in stderr_cols]
-        numeric_df = df.apply(pd.to_numeric, errors="coerce")
+            sample_count = task_result.get("effective_sample_count", 0)
+            aggregate_results["total_effective_sample_count"] += sample_count
 
-        aggregated_scores = numeric_df[score_cols].mean()
-        aggregated_stderrs = (
-            np.sqrt((numeric_df[stderr_cols] ** 2).sum(axis=0, min_count=1))
-            / total_tasks
-            if stderr_cols
-            else pd.Series(dtype=float)
-        )
+            if sample_count <= 0:
+                continue
 
-        final_results = (
-            pd.concat([aggregated_scores, aggregated_stderrs]).round(5).to_dict()
-        )
+            for metric_name, metric_value in task_result["results"].items():
+                aggregate_results["results"][metric_name] = (
+                    aggregate_results["results"].get(metric_name, 0.0)
+                    + metric_value * sample_count
+                )
 
-        return status, final_results
+        total_count = aggregate_results["total_effective_sample_count"]
+        for metric_name, metric_value in aggregate_results["results"].items():
+            aggregate_results["results"][metric_name] = round(
+                metric_value / total_count, 5
+            )
 
-    def _build_benchmark_metrics(self, aggregate_results: dict) -> list[MetricModel]:
+        return status, aggregate_results
+
+    def _build_benchmark_metrics(
+        self, aggregate_results: dict[str, float]
+    ) -> list[MetricModel]:
         metrics = []
 
         for metric_name, metric_value in aggregate_results.items():
-            if self._is_stderr_metric(metric_name):
-                continue
-
-            value = self._to_number(metric_value)
+            value = metric_value
             if value is None:
                 continue
 
@@ -253,27 +269,95 @@ class EvaluationService:
                 MetricModel(
                     name=metric_name,
                     value=value,
-                    stderr=self._to_number(
-                        aggregate_results.get(self._stderr_metric_name(metric_name))
-                    ),
                 )
             )
 
         return metrics
 
-    def _is_stderr_metric(self, metric_name: str) -> bool:
-        return metric_name.endswith(",stderr")
+    def _get_task_metric_results(self, eval_results: dict, task: str) -> dict:
+        task_results = eval_results.get("results", {})
+        results = task_results.get(task)
 
-    def _stderr_metric_name(self, metric_name: str) -> str:
-        return f"{metric_name},stderr"
+        if results is None and len(task_results) == 1:
+            results = next(iter(task_results.values()))
 
-    def _to_number(self, value) -> float | None:
-        if value is None or isinstance(value, bool):
-            return None
+        if not isinstance(results, dict):
+            return {}
 
-        try:
-            number = float(value)
-        except (TypeError, ValueError):
-            return None
+        task_metrics = {}
+        for metric_name in self._get_metric_names(eval_results, task):
+            value = self._get_metric_value(results, metric_name)
+            if value is None:
+                continue
 
-        return number if math.isfinite(number) else None
+            task_metrics[metric_name] = value
+
+        return task_metrics
+
+    def _get_metric_names(self, eval_results: dict, task: str) -> list[str]:
+        config = eval_results.get("configs", {}).get(task)
+
+        if config is None and len(eval_results.get("configs", {})) == 1:
+            config = next(iter(eval_results["configs"].values()))
+
+        metric_list = config.get("metric_list", []) if isinstance(config, dict) else []
+        metric_names = []
+
+        for metric_entry in metric_list:
+            if not isinstance(metric_entry, dict):
+                continue
+
+            metric_name = metric_entry.get("metric")
+            if isinstance(metric_name, str):
+                metric_names.append(metric_name)
+
+        return metric_names
+
+    def _get_metric_value(self, results: dict, metric_name: str) -> float | None:
+        value = self._get_first_existing_value(
+            results,
+            [
+                metric_name,
+                f"{metric_name},none",
+            ],
+        )
+
+        if value is not None:
+            return value
+
+        for result_key, result_value in results.items():
+            result_metric_name, is_stderr = self._parse_result_metric_key(result_key)
+            if result_metric_name == metric_name and not is_stderr:
+                return result_value
+
+        return None
+
+    def _parse_result_metric_key(self, metric_key: str) -> tuple[str, bool]:
+        metric_name, _, suffix = metric_key.partition(",")
+
+        if suffix == "stderr":
+            return metric_name, True
+
+        if metric_name.endswith("_stderr"):
+            return metric_name.removesuffix("_stderr"), True
+
+        return metric_name, False
+
+    def _get_first_existing_value(self, values: dict, keys: list[str]):
+        for key in keys:
+            if key in values:
+                return values[key]
+
+        return None
+
+    def _get_effective_sample_count(self, eval_results: dict, task: str) -> int:
+        task_samples = eval_results.get("n-samples", {})
+        sample_entry = task_samples.get(task)
+
+        if sample_entry is None and len(task_samples) == 1:
+            sample_entry = next(iter(task_samples.values()))
+
+        if not isinstance(sample_entry, dict):
+            return 0
+
+        return sample_entry.get("effective")

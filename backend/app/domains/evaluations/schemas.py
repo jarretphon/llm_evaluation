@@ -23,6 +23,7 @@ class BenchmarkRead(BenchmarkBase):
     id: uuid.UUID
     description: str
     status: str
+    effective_sample_count: int = 0
     metrics: list[BenchmarkMetricRead]
 
 
