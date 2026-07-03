@@ -92,7 +92,7 @@ class LeaderboardRepository:
             )
         )
 
-        return self.session.execute(statement).all()
+        return list(self.session.exec(statement).all())
 
     def _get_selected_scores_subquery(self, benchmark_names: list[str]):
         latest_complete_evaluations = self._get_last_complete_evaluation_subquery()
