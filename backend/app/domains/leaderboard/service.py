@@ -3,10 +3,6 @@ from functools import lru_cache
 from typing import Any
 
 from app.domains.evaluations.traversal import get_root_groups
-from app.domains.leaderboard.errors import (
-    InvalidLeaderboardBenchmarkError,
-    NoLeaderboardBenchmarksSelectedError,
-)
 from app.domains.leaderboard.repository import (
     LeaderboardRepository,
 )
@@ -34,7 +30,6 @@ class LeaderboardService:
         self, leaderboard_request: LeaderboardRequest
     ) -> LeaderboardRead:
         selected_benchmarks = self._dedupe_benchmarks(leaderboard_request.benchmarks)
-        self._validate_benchmarks(selected_benchmarks)
 
         leaderboard_rows = [
             LeaderboardRowRead(
@@ -65,19 +60,6 @@ class LeaderboardService:
 
     def _dedupe_benchmarks(self, benchmarks: list[str]) -> list[str]:
         return list(dict.fromkeys(benchmarks))
-
-    def _validate_benchmarks(self, selected_benchmarks: list[str]) -> None:
-        if not selected_benchmarks:
-            raise NoLeaderboardBenchmarksSelectedError()
-
-        valid_benchmarks = {
-            benchmark
-            for benchmarks in self.list_benchmark_options().values()
-            for benchmark in benchmarks
-        }
-        invalid_benchmarks = sorted(set(selected_benchmarks) - valid_benchmarks)
-        if invalid_benchmarks:
-            raise InvalidLeaderboardBenchmarkError(invalid_benchmarks)
 
     def _build_scores(
         self, scores: dict[str, Any] | str | None
