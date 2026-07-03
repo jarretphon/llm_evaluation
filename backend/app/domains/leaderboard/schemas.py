@@ -17,7 +17,6 @@ class LeaderboardRowRead(BaseModel):
     rank: int | None = None
     model_id: uuid.UUID
     model_name: str
-    provider: str
     weighted_average: float | None = None
     completed_benchmark_count: int
     selected_benchmark_count: int

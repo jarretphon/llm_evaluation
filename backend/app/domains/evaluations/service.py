@@ -122,9 +122,7 @@ class EvaluationService:
 
             status, aggregate_results = self.aggregate_results(benchmark_results)
             self._set_status(benchmark, status)
-            benchmark.effective_sample_count = aggregate_results[
-                "total_effective_sample_count"
-            ]
+            benchmark.n_samples = aggregate_results["total_effective_sample_count"]
             benchmark.metrics = self._build_benchmark_metrics(
                 aggregate_results["results"]
             )

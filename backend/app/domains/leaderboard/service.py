@@ -1,4 +1,6 @@
+import json
 from functools import lru_cache
+from typing import Any
 
 from app.domains.evaluations.traversal import get_root_groups
 from app.domains.leaderboard.errors import (
@@ -6,8 +8,6 @@ from app.domains.leaderboard.errors import (
     NoLeaderboardBenchmarksSelectedError,
 )
 from app.domains.leaderboard.repository import (
-    LeaderboardBenchmarkScore,
-    LeaderboardModelRow,
     LeaderboardRepository,
 )
 from app.domains.leaderboard.schemas import (
@@ -36,14 +36,31 @@ class LeaderboardService:
         selected_benchmarks = self._dedupe_benchmarks(leaderboard_request.benchmarks)
         self._validate_benchmarks(selected_benchmarks)
 
-        leaderboard_rows = self.repository.get_leaderboard_rows(selected_benchmarks)
+        leaderboard_rows = [
+            LeaderboardRowRead(
+                rank=rank,
+                model_id=model_id,
+                model_name=model_name,
+                provider=provider,
+                weighted_average=self._round_score(weighted_average),
+                completed_benchmark_count=completed_benchmark_count,
+                selected_benchmark_count=len(selected_benchmarks),
+                scores=self._build_scores(scores),
+            )
+            for (
+                model_id,
+                model_name,
+                provider,
+                weighted_average,
+                completed_benchmark_count,
+                rank,
+                scores,
+            ) in self.repository.get_leaderboard_rows(selected_benchmarks)
+        ]
 
         return LeaderboardRead(
             selected_benchmarks=selected_benchmarks,
-            rows=self._build_leaderboard_rows(
-                leaderboard_rows=leaderboard_rows,
-                selected_benchmarks=selected_benchmarks,
-            ),
+            rows=leaderboard_rows,
         )
 
     def _dedupe_benchmarks(self, benchmarks: list[str]) -> list[str]:
@@ -62,56 +79,22 @@ class LeaderboardService:
         if invalid_benchmarks:
             raise InvalidLeaderboardBenchmarkError(invalid_benchmarks)
 
-    def _build_leaderboard_rows(
-        self,
-        leaderboard_rows: list[LeaderboardModelRow],
-        selected_benchmarks: list[str],
-    ) -> list[LeaderboardRowRead]:
-        rows = []
-        next_rank = 1
+    def _build_scores(
+        self, scores: dict[str, Any] | str | None
+    ) -> dict[str, LeaderboardScoreRead]:
+        if scores is None:
+            return {}
 
-        for leaderboard_row in leaderboard_rows:
-            is_ranked = (
-                leaderboard_row.completed_benchmark_count
-                == leaderboard_row.selected_benchmark_count
-                and leaderboard_row.weighted_average is not None
-            )
-            rank = next_rank if is_ranked else None
-            if is_ranked:
-                next_rank += 1
+        if isinstance(scores, str):
+            scores = json.loads(scores)
 
-            rows.append(
-                LeaderboardRowRead(
-                    rank=rank,
-                    model_id=leaderboard_row.model_id,
-                    model_name=leaderboard_row.model_name,
-                    provider=leaderboard_row.provider,
-                    weighted_average=leaderboard_row.weighted_average,
-                    completed_benchmark_count=(
-                        leaderboard_row.completed_benchmark_count
-                    ),
-                    selected_benchmark_count=(
-                        leaderboard_row.selected_benchmark_count
-                    ),
-                    scores={
-                        benchmark: self._build_benchmark_score(
-                            leaderboard_row.scores.get(benchmark)
-                        )
-                        for benchmark in selected_benchmarks
-                    },
-                )
-            )
+        return {
+            benchmark_name: LeaderboardScoreRead.model_validate(score)
+            for benchmark_name, score in scores.items()
+        }
 
-        return rows
+    def _round_score(self, value: float | None) -> float | None:
+        if value is None:
+            return None
 
-    def _build_benchmark_score(
-        self, score: LeaderboardBenchmarkScore | None
-    ) -> LeaderboardScoreRead:
-        if score is None:
-            return LeaderboardScoreRead()
-
-        return LeaderboardScoreRead(
-            value=score.value,
-            metric=score.metric_name,
-            effective_sample_count=score.effective_sample_count,
-        )
+        return round(value, 5)
