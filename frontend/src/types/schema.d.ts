@@ -228,8 +228,11 @@ export interface components {
             description: string;
             /** Status */
             status: string;
-            /** Effective Sample Count */
-            effective_sample_count?: number;
+            /**
+             * Effective Sample Count
+             * @default 0
+             */
+            effective_sample_count: number;
             /** Metrics */
             metrics: components["schemas"]["BenchmarkMetricRead"][];
         };
@@ -243,51 +246,6 @@ export interface components {
         ComparisonRequest: {
             /** Model Ids */
             model_ids?: string[];
-        };
-        /** LeaderboardRead */
-        LeaderboardRead: {
-            /** Selected Benchmarks */
-            selected_benchmarks: string[];
-            /** Rows */
-            rows: components["schemas"]["LeaderboardRowRead"][];
-        };
-        /** LeaderboardRequest */
-        LeaderboardRequest: {
-            /** Benchmarks */
-            benchmarks?: string[];
-        };
-        /** LeaderboardRowRead */
-        LeaderboardRowRead: {
-            /** Rank */
-            rank?: number | null;
-            /**
-             * Model Id
-             * Format: uuid
-             */
-            model_id: string;
-            /** Model Name */
-            model_name: string;
-            /** Provider */
-            provider: string;
-            /** Weighted Average */
-            weighted_average?: number | null;
-            /** Completed Benchmark Count */
-            completed_benchmark_count: number;
-            /** Selected Benchmark Count */
-            selected_benchmark_count: number;
-            /** Scores */
-            scores: {
-                [key: string]: components["schemas"]["LeaderboardScoreRead"];
-            };
-        };
-        /** LeaderboardScoreRead */
-        LeaderboardScoreRead: {
-            /** Value */
-            value?: number | null;
-            /** Metric */
-            metric?: string | null;
-            /** Effective Sample Count */
-            effective_sample_count?: number;
         };
         /** EvaluationCreate */
         EvaluationCreate: {
@@ -390,6 +348,52 @@ export interface components {
             provider?: string | null;
             /** Api Key */
             api_key?: string | null;
+        };
+        /** LeaderboardRead */
+        LeaderboardRead: {
+            /** Selected Benchmarks */
+            selected_benchmarks: string[];
+            /** Rows */
+            rows: components["schemas"]["LeaderboardRowRead"][];
+        };
+        /** LeaderboardRequest */
+        LeaderboardRequest: {
+            /** Benchmarks */
+            benchmarks?: string[];
+        };
+        /** LeaderboardRowRead */
+        LeaderboardRowRead: {
+            /** Rank */
+            rank?: number | null;
+            /**
+             * Model Id
+             * Format: uuid
+             */
+            model_id: string;
+            /** Model Name */
+            model_name: string;
+            /** Weighted Average */
+            weighted_average?: number | null;
+            /** Completed Benchmark Count */
+            completed_benchmark_count: number;
+            /** Selected Benchmark Count */
+            selected_benchmark_count: number;
+            /** Scores */
+            scores: {
+                [key: string]: components["schemas"]["LeaderboardScoreRead"];
+            };
+        };
+        /** LeaderboardScoreRead */
+        LeaderboardScoreRead: {
+            /** Value */
+            value?: number | null;
+            /** Metric */
+            metric?: string | null;
+            /**
+             * Effective Sample Count
+             * @default 0
+             */
+            effective_sample_count: number;
         };
         /** ModelMetricResults */
         ModelMetricResults: {

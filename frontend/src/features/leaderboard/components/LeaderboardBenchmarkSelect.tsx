@@ -8,24 +8,36 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
-import type { LeaderboardBenchmarkOptions } from "@/features/leaderboard/schemas/leaderboard"
+import { useGetLeaderboardBenchmarkOptions } from "../hooks/queries/useLeaderboard"
 
 type LeaderboardBenchmarkSelectProps = {
-  benchmarkOptions: LeaderboardBenchmarkOptions
   selectedBenchmarks: string[]
   onChange: (benchmarks: string[]) => void
-  isLoading?: boolean
-  errorMessage?: string
 }
 
 export function LeaderboardBenchmarkSelect({
-  benchmarkOptions,
   selectedBenchmarks,
   onChange,
-  isLoading = false,
-  errorMessage,
 }: LeaderboardBenchmarkSelectProps) {
-  const optionCount = Object.values(benchmarkOptions).reduce(
+  const { data, isPending, error } = useGetLeaderboardBenchmarkOptions()
+
+  if (isPending) {
+    return (
+      <div className="rounded-lg border border-white/10 bg-[#151515] p-8 text-center text-sm text-white/60">
+        Loading benchmarks...
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-[#151515] p-8 text-center text-sm text-red-300">
+        Failed to load benchmarks: {error.message}
+      </div>
+    )
+  }
+
+  const optionCount = Object.values(data).reduce(
     (count, benchmarks) => count + benchmarks.length,
     0
   )
@@ -43,33 +55,27 @@ export function LeaderboardBenchmarkSelect({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading && (
-          <p className="text-sm text-white/60">Loading benchmarks...</p>
-        )}
-        {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
-        {!isLoading && !errorMessage && (
-          <MultiSelect values={selectedBenchmarks} onValuesChange={onChange}>
-            <MultiSelectTrigger className="w-full max-w-160">
-              <MultiSelectValue placeholder="Select benchmarks" />
-            </MultiSelectTrigger>
-            <MultiSelectContent
-              search={{
-                placeholder: "Search benchmarks...",
-                emptyMessage: "No benchmarks found.",
-              }}
-            >
-              {Object.entries(benchmarkOptions).map(([groupName, benchmarks]) => (
-                <MultiSelectGroup key={groupName} heading={groupName}>
-                  {benchmarks.map((benchmark) => (
-                    <MultiSelectItem key={benchmark} value={benchmark}>
-                      {benchmark}
-                    </MultiSelectItem>
-                  ))}
-                </MultiSelectGroup>
-              ))}
-            </MultiSelectContent>
-          </MultiSelect>
-        )}
+        <MultiSelect values={selectedBenchmarks} onValuesChange={onChange}>
+          <MultiSelectTrigger className="w-full max-w-160">
+            <MultiSelectValue placeholder="Select benchmarks" />
+          </MultiSelectTrigger>
+          <MultiSelectContent
+            search={{
+              placeholder: "Search benchmarks...",
+              emptyMessage: "No benchmarks found.",
+            }}
+          >
+            {Object.entries(data).map(([groupName, benchmarks]) => (
+              <MultiSelectGroup key={groupName} heading={groupName}>
+                {benchmarks.map((benchmark) => (
+                  <MultiSelectItem key={benchmark} value={benchmark}>
+                    {benchmark}
+                  </MultiSelectItem>
+                ))}
+              </MultiSelectGroup>
+            ))}
+          </MultiSelectContent>
+        </MultiSelect>
       </CardContent>
     </Card>
   )
