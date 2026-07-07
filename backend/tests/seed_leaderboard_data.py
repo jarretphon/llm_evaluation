@@ -147,8 +147,9 @@ def build_metric_models(
     if benchmark_status != EvaluationStatus.COMPLETED:
         return []
 
-    base_score = 0.52 + (model_index * 0.025) + (benchmark_index * 0.013)
-    score = min(base_score, 0.94)
+    score_bands = [0.18, 0.28, 0.38, 0.52, 0.64, 0.76, 0.86, 0.93]
+    band_index = (model_index + benchmark_index) % len(score_bands)
+    score = score_bands[band_index]
 
     if benchmark_index % 3 == 0:
         return [
