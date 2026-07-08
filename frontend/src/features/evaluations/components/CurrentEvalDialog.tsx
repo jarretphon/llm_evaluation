@@ -120,7 +120,7 @@ export function CurrentEvalDialog({
     }
 
     const metadata = activeEvaluation.metadata_entry
-    const progress = metadata.progress ?? 0
+    const progress = activeEvaluation.progress ?? 0
     const status = activeEvaluation.status
     const isTerminalStatus = terminalStatuses.has(status)
     const isIncomplete = !isTerminalStatus && progress < 100

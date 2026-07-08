@@ -1,14 +1,14 @@
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.domains.evaluations.dependencies import EvaluationServiceDep
 from app.domains.evaluations.errors import (
     EvaluationNotFoundError,
     NoBenchmarksSelectedError,
 )
-
 from app.domains.evaluations.schemas import EvaluationCreate, EvaluationRead
+from app.domains.evaluations.tasks import run_evaluation_task
 from app.domains.llms.errors import LLMNotFoundError
 
 router = APIRouter()
@@ -38,40 +38,21 @@ def get_evaluation(
 
 @router.post("")
 def create_evaluation(
-    evaluation_create: EvaluationCreate,
-    service: EvaluationServiceDep,
+    evaluationCreate: EvaluationCreate, service: EvaluationServiceDep
 ) -> EvaluationRead:
     try:
-        return service.create_evaluation(evaluation_create)
+        evaluation = service.create_evaluation(evaluationCreate)
+        run_evaluation_task.delay(evaluation.id)
     except LLMNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except NoBenchmarksSelectedError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except EvaluationNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create evaluation. Error: {e}",
         )
 
-
-@router.post("/{evaluation_id}")
-def start_evaluation(
-    evaluation_id: uuid.UUID,
-    service: EvaluationServiceDep,
-    background_tasks: BackgroundTasks,
-) -> EvaluationRead:
-    try:
-        evaluation = service.start_registered_evaluation(evaluation_id)
-        background_tasks.add_task(service.run_registered_evaluation, evaluation.id)
-        return evaluation
-    except EvaluationNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
-        try:
-            service.mark_evaluation_failed(evaluation_id)
-        except EvaluationNotFoundError:
-            pass
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start evaluation. Marked as failed. Error: {e}",
-        )
+    return evaluation

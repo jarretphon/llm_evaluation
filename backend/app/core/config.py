@@ -9,6 +9,8 @@ class Settings:
         "DATABASE_URL",
         "postgresql://postgres:12345678@localhost:5432/postgres",
     )
+    broker_url: str = os.getenv("BROKER_URL", "amqp://guest:guest@localhost:5672")
+    result_backend_url: str = os.getenv("RESULT_BACKEND_URL", f"db+{database_url}")
 
 
 settings = Settings()

@@ -32,7 +32,6 @@ class EvaluationMetadata(BaseModel):
     duration: float
     completed_at: datetime | None = None
     estimated_end_time: datetime | None = None
-    progress: float | None = None
 
 
 class EvaluationBase(BaseModel):
@@ -49,5 +48,6 @@ class EvaluationCreate(EvaluationBase):
 class EvaluationRead(EvaluationBase):
     id: uuid.UUID
     status: str
+    progress: float
     metadata_entry: EvaluationMetadata
     benchmarks: list[BenchmarkRead]

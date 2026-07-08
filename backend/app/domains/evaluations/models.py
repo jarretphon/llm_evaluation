@@ -25,6 +25,7 @@ class EvaluationModel(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     llm_id: uuid.UUID = Field(foreign_key="llms.id", ondelete="CASCADE")
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
+    progress: float = Field(default=0.0)
     metadata_entry: "EvaluationMetadata" = Relationship(
         back_populates="evaluation_entry"
     )
@@ -53,7 +54,6 @@ class EvaluationMetadata(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), nullable=True),
     )
-    progress: float = Field(default=0.0)
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="metadata_entry")
 

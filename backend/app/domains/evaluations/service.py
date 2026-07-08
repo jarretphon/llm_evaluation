@@ -21,8 +21,6 @@ from app.domains.evaluations.traversal import get_root_groups
 from app.domains.evaluations.utils import get_group_tasks, require_completions
 from lm_eval.tasks import TaskManager
 
-DEFAULT_EVALUATION_MODEL_NAME = "default"
-
 
 class EvaluationService:
     def __init__(self, repository: EvaluationRepository) -> None:
@@ -64,18 +62,14 @@ class EvaluationService:
         self.repository.create_evaluation(evaluation)
         return evaluation
 
-    def start_registered_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
-        evaluation = self.get_evaluation(evaluation_id)
-        self._set_status(evaluation, EvaluationStatus.RUNNING)
-        evaluation.metadata_entry.started_at = utc_now()
-        self.repository.save_evaluation(evaluation)
-        return evaluation
-
     def run_registered_evaluation(self, evaluation_id: uuid.UUID) -> EvaluationModel:
         evaluation = self.get_evaluation(evaluation_id)
 
+        self.repository.update_evaluation(evaluation, status=EvaluationStatus.RUNNING)
+        self.repository.save_evaluation(evaluation)
+
         model_endpoint = evaluation.llm_entry.endpoint
-        model_name = DEFAULT_EVALUATION_MODEL_NAME
+        model_name = evaluation.llm_entry.name
         benchmark_tasks = [
             (benchmark, self.get_subtasks([benchmark.name]))
             for benchmark in evaluation.benchmarks
@@ -85,7 +79,7 @@ class EvaluationService:
         num_tasks_evaluated = 0
 
         for benchmark, task_list in benchmark_tasks:
-            self._set_status(benchmark, EvaluationStatus.RUNNING)
+            self.repository.update_benchmark(benchmark, status=EvaluationStatus.RUNNING)
             self.repository.save_evaluation(evaluation)
 
             benchmark_results = {}
@@ -116,16 +110,18 @@ class EvaluationService:
                     }
 
                 num_tasks_evaluated += 1
-                self._update_evaluation_progress(
-                    evaluation, total_tasks, num_tasks_evaluated
-                )
+                progress = round((num_tasks_evaluated / total_tasks) * 100)
+                self.repository.update_evaluation(evaluation, progress=progress)
+                self.repository.save_evaluation(evaluation)
 
             status, aggregate_results = self.aggregate_results(benchmark_results)
-            self._set_status(benchmark, status)
-            benchmark.n_samples = aggregate_results["total_effective_sample_count"]
-            benchmark.metrics = self._build_benchmark_metrics(
-                aggregate_results["results"]
+            self.repository.update_benchmark(
+                benchmark,
+                status=status,
+                n_samples=aggregate_results["total_effective_sample_count"],
+                metrics=self._build_benchmark_metrics(aggregate_results["results"]),
             )
+            self.repository.save_evaluation(evaluation)
 
         final_status = self._get_final_status(evaluation.benchmarks)
         self._complete_evaluation(evaluation, final_status)
@@ -154,22 +150,17 @@ class EvaluationService:
             )
         return results
 
-    def _set_status(
-        self, model: EvaluationModel | BenchmarkModel, status: EvaluationStatus
-    ) -> None:
-        model.status = status
-
     def _complete_evaluation(
         self, evaluation: EvaluationModel, status: EvaluationStatus
     ) -> None:
         completed_at = utc_now()
         started_at = self._to_aware_utc(evaluation.metadata_entry.started_at)
+        duration = (completed_at - started_at).total_seconds()
 
-        self._set_status(evaluation, status)
-        evaluation.metadata_entry.completed_at = completed_at
-        evaluation.metadata_entry.duration = (completed_at - started_at).total_seconds()
-        evaluation.metadata_entry.progress = 100.0
-        self.repository.save_evaluation(evaluation)
+        self.repository.update_evaluation_metadata(
+            evaluation.metadata_entry, completed_at=completed_at, duration=duration
+        )
+        self.repository.update_evaluation(evaluation, status=status, progress=100.0)
 
     def _to_aware_utc(self, value: datetime) -> datetime:
         if value.tzinfo is None:
@@ -192,16 +183,6 @@ class EvaluationService:
             return EvaluationStatus.PARTIAL_FAILED
 
         return EvaluationStatus.COMPLETED
-
-    def _update_evaluation_progress(
-        self,
-        evaluation: EvaluationModel,
-        total: int,
-        num_evaluated: int,
-    ) -> None:
-        progress = 100 if total == 0 else round((num_evaluated / total) * 100)
-        evaluation.metadata_entry.progress = progress
-        self.repository.save_evaluation(evaluation)
 
     def get_subtasks(self, groups: list[str]) -> list[str]:
         subtasks = []
@@ -259,14 +240,13 @@ class EvaluationService:
         metrics = []
 
         for metric_name, metric_value in aggregate_results.items():
-            value = metric_value
-            if value is None:
+            if metric_value is None:
                 continue
 
             metrics.append(
                 MetricModel(
                     name=metric_name,
-                    value=value,
+                    value=metric_value,
                 )
             )
 

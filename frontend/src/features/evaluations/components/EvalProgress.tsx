@@ -3,7 +3,7 @@ import type { EvaluationRead } from "@/features/evaluations/schemas/evaluations"
 import { formatProgressValue } from "@/features/evaluations/utils/utils"
 
 export function EvalProgress({ evaluation }: { evaluation: EvaluationRead }) {
-  const progress = evaluation.metadata_entry.progress ?? 0
+  const progress = evaluation.progress ?? 0
 
   return (
     <div className="rounded-3xl border border-border/50 bg-muted/20 p-4">

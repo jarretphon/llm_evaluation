@@ -16,7 +16,7 @@ export function useGetEvaluations() {
     refetchInterval: (query) => {
       const evaluations = query.state.data ?? []
       const hasIncompleteEvaluation = evaluations.some((evaluation) => {
-        const progress = evaluation.metadata_entry.progress ?? 0
+        const progress = evaluation.progress ?? 0
         const status = evaluation.status
 
         return progress < 100 && (status === "running" || status === "queued")
@@ -40,7 +40,7 @@ export function useGetEvaluationById({
     enabled: enabled && !!evaluationId,
     refetchInterval: (query) => {
       const evaluation = query.state.data
-      const progress = evaluation?.metadata_entry.progress ?? 0
+      const progress = evaluation?.progress ?? 0
       const status = evaluation?.status
       const isIncomplete = progress < 100
       const isRunningOrQueued = status === "running" || status === "queued"
@@ -62,29 +62,6 @@ export function useCreateEvaluation() {
       })
       queryClient.invalidateQueries({
         queryKey: ["evaluation", createdEvaluation.id],
-      })
-    },
-  })
-}
-
-export function useStartEvaluation({ modelId }: { modelId: string }) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (evaluationId: string) =>
-      evaluationService.startEvaluation(evaluationId),
-    onSuccess: (startedEvaluation) => {
-      queryClient.invalidateQueries({ queryKey: ["evaluations"] })
-      queryClient.invalidateQueries({ queryKey: ["model", modelId] })
-      queryClient.invalidateQueries({
-        queryKey: ["evaluation", startedEvaluation.id],
-      })
-    },
-    onError: (_error, evaluationId) => {
-      queryClient.invalidateQueries({ queryKey: ["evaluations"] })
-      queryClient.invalidateQueries({ queryKey: ["model", modelId] })
-      queryClient.invalidateQueries({
-        queryKey: ["evaluation", evaluationId],
       })
     },
   })

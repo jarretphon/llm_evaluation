@@ -114,11 +114,11 @@ def create_completed_evaluation(
     evaluation = EvaluationModel(
         llm_id=model.id,
         status=EvaluationStatus.COMPLETED,
+        progress=100.0,
         metadata_entry=EvaluationMetadata(
             started_at=started_at,
             completed_at=completed_at,
             duration=duration,
-            progress=100.0,
         ),
         benchmarks=[
             BenchmarkModel(

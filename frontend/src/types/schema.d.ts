@@ -121,8 +121,7 @@ export interface paths {
         /** Get Evaluation */
         get: operations["get_evaluation_evaluations__evaluation_id__get"];
         put?: never;
-        /** Start Evaluation */
-        post: operations["start_evaluation_evaluations__evaluation_id__post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -277,8 +276,6 @@ export interface components {
             completed_at?: string | null;
             /** Estimated End Time */
             estimated_end_time?: string | null;
-            /** Progress */
-            progress?: number | null;
         };
         /** EvaluationRead */
         EvaluationRead: {
@@ -291,6 +288,8 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+            /** Progress */
+            progress: number;
             metadata_entry: components["schemas"]["EvaluationMetadata"];
         };
         /** HTTPValidationError */
@@ -789,37 +788,6 @@ export interface operations {
         };
     };
     get_evaluation_evaluations__evaluation_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                evaluation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EvaluationRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_evaluation_evaluations__evaluation_id__post: {
         parameters: {
             query?: never;
             header?: never;

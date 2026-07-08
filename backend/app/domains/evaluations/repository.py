@@ -1,6 +1,10 @@
 import uuid
 
-from app.domains.evaluations.models import BenchmarkModel, EvaluationModel
+from app.domains.evaluations.models import (
+    BenchmarkModel,
+    EvaluationMetadata,
+    EvaluationModel,
+)
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
@@ -50,3 +54,37 @@ class EvaluationRepository:
         self.session.refresh(evaluation)
 
         return evaluation
+
+    def update_evaluation(
+        self, evaluation: EvaluationModel, **kwargs
+    ) -> EvaluationModel:
+        for key, value in kwargs.items():
+            if hasattr(evaluation, key):
+                setattr(evaluation, key, value)
+            else:
+                raise AttributeError(f"EvaluationModel has no attribute '{key}'")
+
+        self.session.add(evaluation)
+        return evaluation
+
+    def update_evaluation_metadata(
+        self, metadata: EvaluationMetadata, **kwargs
+    ) -> EvaluationMetadata:
+        for key, value in kwargs.items():
+            if hasattr(metadata, key):
+                setattr(metadata, key, value)
+            else:
+                raise AttributeError(f"EvaluationMetadata has no attribute '{key}'")
+
+        self.session.add(metadata)
+        return metadata
+
+    def update_benchmark(self, benchmark: BenchmarkModel, **kwargs) -> BenchmarkModel:
+        for key, value in kwargs.items():
+            if hasattr(benchmark, key):
+                setattr(benchmark, key, value)
+            else:
+                raise AttributeError(f"BenchmarkModel has no attribute '{key}'")
+
+        self.session.add(benchmark)
+        return benchmark

@@ -10,7 +10,7 @@ const formatStatus = (status: string) => {
 }
 
 const EvaluationProgress = ({ record }: { record: EvaluationRecord }) => {
-  const progress = record.metadata_entry.progress ?? 0
+  const progress = record.progress ?? 0
   const type = record.status
   const shouldShowProgress = type === "running" || progress < 100
 
