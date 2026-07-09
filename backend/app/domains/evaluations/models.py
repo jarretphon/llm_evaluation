@@ -73,6 +73,10 @@ class BenchmarkModel(SQLModel, table=True):
 
     evaluation_entry: "EvaluationModel" = Relationship(back_populates="benchmarks")
 
+    @property
+    def effective_sample_count(self) -> int:
+        return self.n_samples
+
 
 class MetricModel(SQLModel, table=True):
     __tablename__ = "benchmark_metrics"

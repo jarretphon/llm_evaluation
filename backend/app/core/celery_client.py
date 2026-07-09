@@ -3,9 +3,7 @@ from celery.signals import worker_process_init
 
 from .config import settings
 
-app = Celery(
-    "llm-evaluation", broker=settings.broker_url, backend=settings.result_backend_url
-)
+app = Celery("llm-evaluation", broker=settings.broker_url)
 
 app.autodiscover_tasks(["app.domains.evaluations"])
 

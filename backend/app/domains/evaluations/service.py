@@ -15,6 +15,7 @@ from app.domains.evaluations.models import (
     MetricModel,
     utc_now,
 )
+from app.domains.evaluations.notifications import publish_evaluation_update
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.schemas import EvaluationCreate
 from app.domains.evaluations.traversal import get_root_groups
@@ -67,6 +68,7 @@ class EvaluationService:
 
         self.repository.update_evaluation(evaluation, status=EvaluationStatus.RUNNING)
         self.repository.save_evaluation(evaluation)
+        self.broadcast_update(evaluation)
 
         model_endpoint = evaluation.llm_entry.endpoint
         model_name = evaluation.llm_entry.name
@@ -113,6 +115,7 @@ class EvaluationService:
                 progress = round((num_tasks_evaluated / total_tasks) * 100)
                 self.repository.update_evaluation(evaluation, progress=progress)
                 self.repository.save_evaluation(evaluation)
+                self.broadcast_update(evaluation)
 
             status, aggregate_results = self.aggregate_results(benchmark_results)
             self.repository.update_benchmark(
@@ -122,10 +125,12 @@ class EvaluationService:
                 metrics=self._build_benchmark_metrics(aggregate_results["results"]),
             )
             self.repository.save_evaluation(evaluation)
+            self.broadcast_update(evaluation)
 
         final_status = self._get_final_status(evaluation.benchmarks)
         self._complete_evaluation(evaluation, final_status)
         self.repository.save_evaluation(evaluation)
+        self.broadcast_update(evaluation)
 
         return evaluation
 
@@ -339,3 +344,9 @@ class EvaluationService:
             return 0
 
         return sample_entry.get("effective")
+
+    def broadcast_update(self, evaluation: EvaluationModel) -> None:
+        try:
+            publish_evaluation_update(evaluation)
+        except Exception as e:
+            print(f"Failed to broadcast evaluation update: {e}")
