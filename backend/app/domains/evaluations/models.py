@@ -27,7 +27,7 @@ class EvaluationModel(SQLModel, table=True):
     status: EvaluationStatus = Field(default=EvaluationStatus.QUEUED)
     progress: float = Field(default=0.0)
     metadata_entry: "EvaluationMetadata" = Relationship(
-        back_populates="evaluation_entry"
+        back_populates="evaluation_entry", cascade_delete=True
     )
     benchmarks: list["BenchmarkModel"] = Relationship(
         back_populates="evaluation_entry", cascade_delete=True
@@ -40,7 +40,7 @@ class EvaluationModel(SQLModel, table=True):
 
 class EvaluationMetadata(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, unique=True)
-    evaluation_id: uuid.UUID = Field(foreign_key="evaluations.id")
+    evaluation_id: uuid.UUID = Field(foreign_key="evaluations.id", ondelete="CASCADE")
     started_at: datetime = Field(
         default_factory=utc_now,
         sa_column=Column(DateTime(timezone=True), nullable=False),
