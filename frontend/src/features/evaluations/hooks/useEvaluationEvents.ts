@@ -52,7 +52,7 @@ const replaceModelEvaluation = (
   }
 }
 
-export function EvaluationEventsListener() {
+export function useEvaluationEvents() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -74,24 +74,15 @@ export function EvaluationEventsListener() {
           ["evaluation", updatedEvaluation.id],
           updatedEvaluation
         )
-        queryClient.setQueriesData<LLMRead>(
-          { queryKey: ["model"] },
-          (model) => replaceModelEvaluation(model, updatedEvaluation)
-        )
-        queryClient.setQueryData<LLMRead[]>(["models"], (models) =>
-          models?.map(
-            (model) => replaceModelEvaluation(model, updatedEvaluation) ?? model
-          )
+        queryClient.setQueriesData<LLMRead>({ queryKey: ["model"] }, (model) =>
+          replaceModelEvaluation(model, updatedEvaluation)
         )
       } catch (error) {
         console.error("Failed to parse evaluation update event", error)
       }
     }
 
-    eventSource.addEventListener(
-      "evaluation_update",
-      handleEvaluationUpdate
-    )
+    eventSource.addEventListener("evaluation_update", handleEvaluationUpdate)
 
     return () => {
       eventSource.removeEventListener(
@@ -101,6 +92,4 @@ export function EvaluationEventsListener() {
       eventSource.close()
     }
   }, [queryClient])
-
-  return null
 }

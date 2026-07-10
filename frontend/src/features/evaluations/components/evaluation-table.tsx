@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { NewEvalDialog } from "@/features/evaluations/components/NewEvalDialog"
 import { CurrentEvalDialog } from "@/features/evaluations/components/CurrentEvalDialog"
+import { useEvaluationEvents } from "@/features/evaluations/hooks/useEvaluationEvents"
 import { useGetEvaluations } from "@/features/evaluations/hooks/queries/useEvaluations"
 import type { EvaluationRead } from "@/features/evaluations/schemas/evaluations"
 import { EvaluationCard } from "./EvaluationCard"
@@ -89,6 +90,8 @@ const getEvaluationStatus = (record: EvaluationRead): EvaluationStatus => {
 }
 
 export function EvaluationTable() {
+  useEvaluationEvents()
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [activeEvaluation, setActiveEvaluation] =

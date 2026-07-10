@@ -4,7 +4,7 @@ from contextlib import suppress
 
 import aio_pika
 from fastapi import APIRouter, HTTPException, Request, status
-from sse_starlette.sse import EventSourceResponse
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from app.domains.evaluations.dependencies import EvaluationServiceDep
 from app.domains.evaluations.errors import (
@@ -34,14 +34,14 @@ def get_all_evaluations(
     return evaluation_service.list_evaluations(offset=offset, limit=limit)
 
 
-async def stream_evaluation_updates(
+@router.get("/events", response_class=EventSourceResponse)
+async def get_evaluation_events(
     request: Request,
-) -> AsyncIterator[dict[str, str]]:
+) -> AsyncIterator[ServerSentEvent]:
     connection = request.app.state.amqp_connection
     channel = await connection.channel()
     exchange = await channel.declare_exchange(
-        EVALUATION_UPDATES_EXCHANGE,
-        aio_pika.ExchangeType.TOPIC,
+        EVALUATION_UPDATES_EXCHANGE, aio_pika.ExchangeType.TOPIC
     )
     queue = await channel.declare_queue(exclusive=True, auto_delete=True)
     await queue.bind(exchange, routing_key=EVALUATION_UPDATES_ROUTING_KEY)
@@ -53,22 +53,13 @@ async def stream_evaluation_updates(
                     break
 
                 async with message.process():
-                    yield {
-                        "event": "evaluation_update",
-                        "data": message.body.decode(),
-                    }
+                    yield ServerSentEvent(
+                        event="evaluation_update",
+                        raw_data=message.body.decode(),
+                    )
     finally:
         with suppress(Exception):
             await channel.close()
-
-
-@router.get("/events")
-def get_evaluation_events(request: Request) -> EventSourceResponse:
-    return EventSourceResponse(
-        stream_evaluation_updates(request),
-        ping=15,
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
 
 
 @router.get("/{evaluation_id}")

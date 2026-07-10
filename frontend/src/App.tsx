@@ -10,7 +10,6 @@ import { Evaluations } from "@/pages/evaluations/evaluations"
 import { Compare } from "@/pages/compare/compare"
 import { Leaderboard } from "@/pages/leaderboard/leaderboard"
 import { Toaster } from "@/components/ui/sonner"
-import { EvaluationEventsListener } from "@/features/evaluations/components/EvaluationEventsListener"
 
 export function App() {
   return (
@@ -22,7 +21,6 @@ export function App() {
         } as React.CSSProperties
       }
     >
-      <EvaluationEventsListener />
       <AppSidebar variant="floating" collapsible="icon" />
       <SidebarInset>
         <SiteHeader />

@@ -18,6 +18,7 @@ import {
   type dateFilter,
   TimeRangeFilter,
 } from "@/features/evaluations/components/TimeRangeFilter"
+import { useEvaluationEvents } from "@/features/evaluations/hooks/useEvaluationEvents"
 import { sortEvaluationsBy } from "@/utils/helpers"
 import type { components } from "@/types/schema"
 
@@ -64,6 +65,8 @@ export function ModelEvaluationPanel({
   model,
   onSelectEvaluation,
 }: ModelEvaluationPanelProps) {
+  useEvaluationEvents()
+
   const [filter, setFilter] = useState<dateFilter>("7d")
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfDay(addDays(new Date(), -6)),

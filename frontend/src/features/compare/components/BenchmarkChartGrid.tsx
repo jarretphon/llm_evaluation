@@ -7,10 +7,6 @@ export function BenchmarkChartGrid({
 }: {
   selectedModelIds: string[]
 }) {
-  if (selectedModelIds.length === 0) {
-    return <ChartGridEmpty />
-  }
-
   const { data, isPending, error } = useCompareModels(selectedModelIds)
 
   if (isPending) {
@@ -19,6 +15,10 @@ export function BenchmarkChartGrid({
 
   if (error) {
     return <div>Error loading comparison: {error.message}</div>
+  }
+
+  if (!data || Object.keys(data).length === 0) {
+    return <ChartGridEmpty />
   }
 
   const comparisonBenchmarks = Object.entries(data)
