@@ -9,6 +9,10 @@ class Settings:
         "DATABASE_URL",
         "postgresql://postgres:12345678@localhost:5432/postgres",
     )
+    test_database_url: str = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql://postgres:12345678@localhost:5433/test_postgres",
+    )
     broker_url: str = os.getenv("BROKER_URL", "amqp://guest:guest@localhost:5672")
     result_backend_url: str = os.getenv("RESULT_BACKEND_URL", f"db+{database_url}")
 
