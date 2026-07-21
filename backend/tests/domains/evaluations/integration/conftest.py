@@ -93,6 +93,61 @@ def make_evaluation_payload() -> Callable[..., dict]:
 
 
 @pytest.fixture
+def make_lm_eval_result() -> Callable[..., dict]:
+    def _make_lm_eval_result(
+        task_name: str,
+        *,
+        acc: float,
+        effective_samples: int,
+        original_samples: int | None = None,
+    ) -> dict:
+        sample_count = (
+            original_samples if original_samples is not None else effective_samples
+        )
+
+        return {
+            "results": {
+                task_name: {
+                    "acc,none": acc,
+                }
+            },
+            "configs": {
+                task_name: {
+                    "metric_list": [
+                        {
+                            "metric": "acc",
+                            "aggregation": "mean",
+                            "higher_is_better": True,
+                        },
+                    ]
+                }
+            },
+            "versions": {
+                task_name: 1.0,
+            },
+            "n-shot": {
+                task_name: 0,
+            },
+            "higher_is_better": {
+                task_name: {
+                    "acc": True,
+                }
+            },
+            "n-samples": {
+                task_name: {
+                    "original": sample_count,
+                    "effective": effective_samples,
+                }
+            },
+            "samples": {
+                task_name: [],
+            },
+        }
+
+    return _make_lm_eval_result
+
+
+@pytest.fixture
 def seed_evaluation(
     db_session: Session,
     seed_llm: Callable[..., LLMModel],
