@@ -44,6 +44,10 @@ class ComparisonRepository:
                 )
                 .label("rank"),
             )
+            .join(
+                EvaluationMetadata,
+                EvaluationMetadata.evaluation_id == EvaluationModel.id,
+            )
             .where(
                 EvaluationModel.llm_id.in_(model_ids),
                 EvaluationModel.status == EvaluationStatus.COMPLETED,

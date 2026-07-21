@@ -1,20 +1,11 @@
 import uuid
 from collections.abc import Callable, Iterator
-from datetime import UTC, datetime
 
 import app.api.evaluations as evaluations_api
 import pytest
 from app.api.evaluations import router as evaluations_router
 from app.db.session import get_session
-from app.domains.evaluations.models import (
-    BenchmarkModel,
-    EvaluationMetadata,
-    EvaluationModel,
-    EvaluationStatus,
-    MetricModel,
-)
 from app.domains.evaluations.repository import EvaluationRepository
-from app.domains.llms.models import LLMModel
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -48,32 +39,6 @@ def api_client(
 
 
 @pytest.fixture
-def seed_llm(db_session: Session) -> Callable[..., LLMModel]:
-    def _seed_llm(
-        *,
-        name: str | None = None,
-        endpoint: str = "http://localhost:8001/v1",
-        description: str = "A seeded model for evaluation tests",
-        provider: str = "OpenAI",
-        api_key: str = "seed-api-key",
-    ) -> LLMModel:
-        llm = LLMModel(
-            id=uuid.uuid4(),
-            name=name or f"Evaluation Test Model {uuid.uuid4()}",
-            endpoint=endpoint,
-            description=description,
-            provider=provider,
-            api_key=api_key,
-        )
-        db_session.add(llm)
-        db_session.commit()
-        db_session.refresh(llm)
-        return llm
-
-    return _seed_llm
-
-
-@pytest.fixture
 def make_evaluation_payload() -> Callable[..., dict]:
     def _make_evaluation_payload(
         *,
@@ -90,99 +55,3 @@ def make_evaluation_payload() -> Callable[..., dict]:
         }
 
     return _make_evaluation_payload
-
-
-@pytest.fixture
-def make_lm_eval_result() -> Callable[..., dict]:
-    def _make_lm_eval_result(
-        task_name: str,
-        *,
-        acc: float,
-        effective_samples: int,
-        original_samples: int | None = None,
-    ) -> dict:
-        sample_count = (
-            original_samples if original_samples is not None else effective_samples
-        )
-
-        return {
-            "results": {
-                task_name: {
-                    "acc,none": acc,
-                }
-            },
-            "configs": {
-                task_name: {
-                    "metric_list": [
-                        {
-                            "metric": "acc",
-                            "aggregation": "mean",
-                            "higher_is_better": True,
-                        },
-                    ]
-                }
-            },
-            "versions": {
-                task_name: 1.0,
-            },
-            "n-shot": {
-                task_name: 0,
-            },
-            "higher_is_better": {
-                task_name: {
-                    "acc": True,
-                }
-            },
-            "n-samples": {
-                task_name: {
-                    "original": sample_count,
-                    "effective": effective_samples,
-                }
-            },
-            "samples": {
-                task_name: [],
-            },
-        }
-
-    return _make_lm_eval_result
-
-
-@pytest.fixture
-def seed_evaluation(
-    db_session: Session,
-    seed_llm: Callable[..., LLMModel],
-) -> Callable[..., EvaluationModel]:
-    def _seed_evaluation(
-        *,
-        llm: LLMModel | None = None,
-        status: EvaluationStatus = EvaluationStatus.QUEUED,
-        progress: float = 0.0,
-        benchmarks: list[BenchmarkModel] | None = None,
-        started_at: datetime | None = None,
-    ) -> EvaluationModel:
-        llm = llm or seed_llm()
-        evaluation = EvaluationModel(
-            id=uuid.uuid4(),
-            llm_id=llm.id,
-            status=status,
-            progress=progress,
-            metadata_entry=EvaluationMetadata(
-                started_at=started_at or datetime.now(UTC)
-            ),
-            benchmarks=benchmarks
-            if benchmarks is not None
-            else [
-                BenchmarkModel(
-                    name="mmlu",
-                    status=EvaluationStatus.COMPLETED,
-                    n_samples=20,
-                    metrics=[MetricModel(name="acc", value=0.8)],
-                )
-            ],
-        )
-        db_session.add(evaluation)
-        db_session.commit()
-        db_session.refresh(evaluation)
-        return evaluation
-
-    return _seed_evaluation

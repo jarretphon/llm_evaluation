@@ -1,4 +1,3 @@
-import uuid
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 
@@ -66,34 +65,6 @@ def make_llm_payload() -> Callable[..., dict[str, str]]:
         }
 
     return _make_llm_payload
-
-
-@pytest.fixture
-def seed_llm(db_session: Session) -> Callable[..., LLMModel]:
-    def _seed_llm(
-        *,
-        name: str = "Seed Model",
-        endpoint: str = "http://localhost:8001/v1",
-        description: str = "A seeded model",
-        provider: str = "OpenAI",
-        api_key: str = "seed-api-key",
-        added_at: datetime | None = None,
-    ) -> LLMModel:
-        llm = LLMModel(
-            id=uuid.uuid4(),
-            name=name,
-            endpoint=endpoint,
-            description=description,
-            provider=provider,
-            api_key=api_key,
-            added_at=added_at or datetime.now(UTC),
-        )
-        db_session.add(llm)
-        db_session.commit()
-        db_session.refresh(llm)
-        return llm
-
-    return _seed_llm
 
 
 @pytest.fixture
