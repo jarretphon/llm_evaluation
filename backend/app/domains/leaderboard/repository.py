@@ -18,6 +18,8 @@ class LeaderboardRepository:
         self.session = session
 
     def get_leaderboard_rows(self, benchmark_names: list[str]):
+        benchmark_names = list(dict.fromkeys(benchmark_names))
+
         if not benchmark_names:
             return []
 
