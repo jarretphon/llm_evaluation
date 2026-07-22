@@ -19,6 +19,7 @@ export function CardActionsDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        aria-label="Model actions"
         className="inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}

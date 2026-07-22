@@ -1,6 +1,6 @@
 import uuid
 
-from app.domains.llms.errors import LLMNotFoundError
+from app.domains.llms.errors import LLMNameAlreadyExistsError, LLMNotFoundError
 from app.domains.llms.models import LLMModel
 from app.domains.llms.repository import LLMRepository
 from app.domains.llms.schemas import LLMCreate, LLMUpdate
@@ -22,6 +22,10 @@ class LLMService:
         return llm
 
     def create_llm(self, llm_create: LLMCreate) -> LLMModel:
+        existing_llm = self.repository.get_by_name(llm_create.name)
+        if existing_llm is not None:
+            raise LLMNameAlreadyExistsError(llm_create.name)
+
         return self.repository.create_llm(llm_create)
 
     def edit_llm(self, llm_id: uuid.UUID, llm_update: LLMUpdate) -> LLMModel:
@@ -29,6 +33,11 @@ class LLMService:
 
         if llm_entry is None:
             raise LLMNotFoundError(llm_id)
+
+        if llm_update.name is not None:
+            existing_llm = self.repository.get_by_name(llm_update.name)
+            if existing_llm is not None and existing_llm.id != llm_entry.id:
+                raise LLMNameAlreadyExistsError(llm_update.name)
 
         return self.repository.edit_llm(llm_entry, llm_update)
 

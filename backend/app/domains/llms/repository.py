@@ -10,11 +10,20 @@ class LLMRepository:
         self.session = session
 
     def list_llms(self, offset: int = 0, limit: int = 10) -> list[LLMModel]:
-        statement = select(LLMModel).order_by(LLMModel.added_at.desc(), LLMModel.id).offset(offset).limit(limit)
+        statement = (
+            select(LLMModel)
+            .order_by(LLMModel.added_at.desc(), LLMModel.id)
+            .offset(offset)
+            .limit(limit)
+        )
         return list(self.session.exec(statement).all())
 
     def get_by_id(self, id: uuid.UUID) -> LLMModel | None:
         statement = select(LLMModel).where(LLMModel.id == id)
+        return self.session.exec(statement).first()
+
+    def get_by_name(self, name: str) -> LLMModel | None:
+        statement = select(LLMModel).where(LLMModel.name == name)
         return self.session.exec(statement).first()
 
     def create_llm(self, llm_create: LLMCreate) -> LLMModel:

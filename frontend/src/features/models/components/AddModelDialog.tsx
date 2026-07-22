@@ -36,10 +36,8 @@ export function AddModelModal({ isOpen, setIsOpen }: ModalProps) {
           onSubmitSuccess={() => setIsOpen(false)}
         />
         <DialogFooter>
-          <DialogClose>
-            <Button variant="outline">
-              {MODEL_TEXT.ADD_MODEL_DIALOG.secondaryActionLabel}
-            </Button>
+          <DialogClose render={<Button variant="outline" />}>
+            {MODEL_TEXT.ADD_MODEL_DIALOG.secondaryActionLabel}
           </DialogClose>
           <Button type="submit" form={ADD_MODEL_FORM_ID}>
             {MODEL_TEXT.ADD_MODEL_DIALOG.primaryActionLabel}

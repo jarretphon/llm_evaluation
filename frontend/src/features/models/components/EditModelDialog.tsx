@@ -40,10 +40,8 @@ export function EditModelModal({ isOpen, setIsOpen, model }: ModalProps) {
           onSubmitSuccess={() => setIsOpen(false)}
         />
         <DialogFooter>
-          <DialogClose>
-            <Button variant="outline">
-              {MODEL_TEXT.EDIT_MODEL_DIALOG.secondaryActionLabel}
-            </Button>
+          <DialogClose render={<Button variant="outline" />}>
+            {MODEL_TEXT.EDIT_MODEL_DIALOG.secondaryActionLabel}
           </DialogClose>
           <Button type="submit" form={formId}>
             {MODEL_TEXT.EDIT_MODEL_DIALOG.primaryActionLabel}

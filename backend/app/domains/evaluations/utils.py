@@ -9,31 +9,26 @@ OUTPUT_TYPES = [
 ]
 COMPLETIONS_TYPES = ["multiple_choice", "loglikelihood_rolling", "loglikelihood"]
 
-task_manager = TaskManager()
 hella_swag = "hellaswag"
 mmlu = "mmlu"
 
-task_config = task_manager.task_index["mmlu_stem_tasks"]
 
-# print(task_config)
-
-
-def is_task(task_name):
+def is_task(task_name, task_manager: TaskManager) -> bool:
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.TASK
 
 
-def is_group(task_name):
+def is_group(task_name, task_manager: TaskManager) -> bool:
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.GROUP
 
 
-def is_tag(task_name):
+def is_tag(task_name, task_manager: TaskManager) -> bool:
     task_entry = task_manager.task_index[task_name]
     return task_entry.kind == Kind.TAG
 
 
-def require_completions(task_name):
+def require_completions(task_name, task_manager: TaskManager) -> bool:
     task_entry = task_manager.task_index[task_name]
     output_type = task_entry.cfg["output_type"]
     return output_type in COMPLETIONS_TYPES
