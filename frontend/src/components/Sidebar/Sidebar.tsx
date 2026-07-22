@@ -13,7 +13,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
-  LayoutDashboardIcon,
   ChartBarIcon,
   Settings2Icon,
   CircleHelpIcon,
@@ -31,13 +30,8 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/",
-      icon: <LayoutDashboardIcon />,
-    },
-    {
       title: "Models",
-      url: "/models",
+      url: "/",
       icon: <Bot />,
     },
     {
@@ -77,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<a href="#" />}
+              render={<a href="#" aria-label="LLM Evaluation home" />}
             >
               <Radar className="size-6!" />
               <span className="text-base font-semibold">LLM Evaluation</span>

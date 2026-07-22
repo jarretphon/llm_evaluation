@@ -3,7 +3,6 @@ import { AppSidebar } from "@/components/Sidebar/Sidebar"
 import { SiteHeader } from "@/components/site-header"
 
 import { Route, Routes } from "react-router-dom"
-import { Dashboard } from "@/pages/dashboard/dashboard"
 import { Models } from "@/pages/models/models"
 import { ModelDetails } from "@/pages/modelDetails/modelDetails"
 import { Evaluations } from "@/pages/evaluations/evaluations"
@@ -25,8 +24,7 @@ export function App() {
       <SidebarInset>
         <SiteHeader />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/models" element={<Models />} />
+          <Route path="/" element={<Models />} />
           <Route path="/models/:modelId" element={<ModelDetails />} />
           <Route path="/evaluations" element={<Evaluations />} />
           <Route path="/compare" element={<Compare />} />
