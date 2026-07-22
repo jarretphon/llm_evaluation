@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { NEW_EVAL_DIALOG_TEXTS } from "@/features/evaluations/components/NewEvalDialog.texts"
+import { NEW_EVAL_DIALOG_TEXTS } from "@/features/evaluations/constants/NewEvalDialog.texts"
 import { NewEvaluationForm } from "@/features/evaluations/components/forms/NewEvaluationForm"
 import {
   Dialog,

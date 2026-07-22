@@ -2,7 +2,7 @@ export function formatProgressValue(progress: number): number {
   return Math.round(progress)
 }
 
-export function formatDateTime(value: string | null | undefined): string {
+function formatDateTime(value: string | null | undefined): string {
   if (!value) {
     return "—"
   }

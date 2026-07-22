@@ -55,8 +55,8 @@ export function BenchmarkChart({
           </TabsList>
 
           {metricNames.map((metric) => (
-            <TabsContent value={metric}>
-              <MetricChart key={metric} chartData={metrics[metric] ?? []} />
+            <TabsContent key={metric} value={metric}>
+              <MetricChart chartData={metrics[metric] ?? []} />
             </TabsContent>
           ))}
         </Tabs>

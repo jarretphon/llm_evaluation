@@ -48,8 +48,9 @@ export function EvaluationCard({
   onSelect: (record: EvaluationRecord) => void | undefined
 }) {
   return (
-    <div
-      className="flex cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 transition hover:bg-[#252525] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+    <button
+      type="button"
+      className="flex w-full cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 text-left transition hover:bg-[#252525] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
       onClick={() => onSelect(record)}
     >
       <div className="flex min-w-0 items-start gap-3 sm:flex-1 sm:basis-64">
@@ -65,6 +66,6 @@ export function EvaluationCard({
       </div>
 
       <EvaluationProgress record={record} />
-    </div>
+    </button>
   )
 }

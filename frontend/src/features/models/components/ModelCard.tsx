@@ -40,13 +40,24 @@ export function ModelCard({ model, onSelect }: ModelCardProps) {
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState(false)
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false)
+  const selectModel = () => onSelect(model.id)
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return
+    }
+
+    event.preventDefault()
+    selectModel()
+  }
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
-        onClick={() => onSelect(model.id)}
+        onClick={selectModel}
+        onKeyDown={handleKeyDown}
         className="group w-full text-left focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
       >
         <Card className="relative h-full gap-4 border border-border/50 bg-[#161616] text-white shadow-xl transition hover:border-white/20 hover:bg-[#1a1a1a]">

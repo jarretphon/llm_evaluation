@@ -1,4 +1,5 @@
 import { Check, Minus } from "lucide-react"
+import type { MouseEvent } from "react"
 
 export type CheckboxState = "checked" | "unchecked" | "indeterminate"
 
@@ -7,7 +8,7 @@ export function TriCheckbox({
   onClick,
 }: {
   state: CheckboxState
-  onClick: () => void
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void
 }) {
   return (
     <button

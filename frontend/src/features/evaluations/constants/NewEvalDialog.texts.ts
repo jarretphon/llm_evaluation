@@ -5,8 +5,3 @@ export const NEW_EVAL_DIALOG_TEXTS = {
   primaryActionLabel: "Start Evaluation",
   secondaryActionLabel: "Cancel",
 }
-
-export const formLabels = {
-  modelEndpoint: "Model",
-  modelDescription: "Benchmarks",
-}

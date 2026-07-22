@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from "lucide-react"
+import { Check, ChevronDownIcon, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -17,10 +17,62 @@ import type { components } from "@/types/schema"
 import { toast } from "sonner"
 
 type Task = [name: string, subgroups: string[]]
-type TaskProps = { name: string; taskState: CheckboxState }
+type TaskProps = {
+  name: string
+  taskState: CheckboxState
+  onToggle: (name: string) => void
+}
 type Model = components["schemas"]["LLMRead"]
 
 const DEFAULT_EVALUATION_MODEL_NAME = "default"
+
+function Task({ name, taskState, onToggle }: TaskProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={
+        taskState === "indeterminate" ? "mixed" : taskState === "checked"
+      }
+      className="flex w-full items-center gap-4 rounded-md px-4 py-2 text-left transition-colors hover:bg-accent"
+      onClick={() => onToggle(name)}
+    >
+      <span
+        aria-hidden="true"
+        className={[
+          "relative flex size-4 shrink-0 items-center justify-center rounded-[5px] border border-transparent bg-input/90 transition-shadow",
+          taskState === "unchecked"
+            ? "bg-background"
+            : "bg-primary text-primary-foreground",
+        ].join(" ")}
+      >
+        {taskState === "checked" && <Check strokeWidth={3} />}
+        {taskState === "indeterminate" && <Minus strokeWidth={3} />}
+      </span>
+      <span className="truncate">{name}</span>
+    </button>
+  )
+}
+
+const getTaskState = (benchmark: Task, selected: Set<string>): CheckboxState => {
+  const [name, subgroups] = benchmark
+  // Benchmark is a standalone task
+  if (subgroups.length === 0) {
+    return selected.has(name) ? "checked" : "unchecked"
+  }
+
+  // Benchmark consists of subgroups
+  const selectedCount = subgroups.filter((g) => selected.has(g)).length
+
+  if (selectedCount === 0) {
+    return "unchecked"
+  }
+
+  if (selectedCount === subgroups.length) {
+    return "checked"
+  }
+
+  return "indeterminate"
+}
 
 export function NewEvaluationForm({
   formId,
@@ -71,27 +123,6 @@ export function NewEvaluationForm({
     })
   }
 
-  const getTaskState = (benchmark: Task, selected: Set<string>) => {
-    const [name, subgroups] = benchmark
-    // Benchmark is a standalone task
-    if (subgroups.length === 0) {
-      return selected.has(name) ? "checked" : "unchecked"
-    }
-
-    // Benchmark consists of subgroups
-    const selectedCount = subgroups.filter((g) => selected.has(g)).length
-
-    if (selectedCount === 0) {
-      return "unchecked"
-    }
-
-    if (selectedCount === subgroups.length) {
-      return "checked"
-    }
-
-    return "indeterminate"
-  }
-
   const toggleTask = (benchmark: Task) => {
     setSelectedItems((currentSelection) => {
       const nextSelection = new Set(currentSelection)
@@ -125,26 +156,6 @@ export function NewEvaluationForm({
         : nextSelection.add(groupId)
       return nextSelection
     })
-  }
-
-  const Task = ({ name, taskState }: TaskProps) => {
-    return (
-      <div
-        key={name}
-        className="flex items-center gap-4 rounded-md px-4 py-2 transition-colors hover:bg-accent"
-        onClick={() => toggleSubtask(name)}
-      >
-        <div
-          onClick={(event) => {
-            event.stopPropagation()
-            toggleSubtask(name)
-          }}
-        >
-          <TriCheckbox state={taskState} onClick={() => {}} />
-        </div>
-        <div className="truncate">{name}</div>
-      </div>
-    )
   }
 
   return (
@@ -185,6 +196,7 @@ export function NewEvaluationForm({
                         <Task
                           key={child}
                           name={child}
+                          onToggle={toggleSubtask}
                           taskState={
                             selectedItems.has(child) ? "checked" : "unchecked"
                           }
@@ -194,7 +206,12 @@ export function NewEvaluationForm({
                   </CollapsibleContent>
                 </Collapsible>
               ) : (
-                <Task name={name} taskState={benchmarkState} />
+                <Task
+                  key={name}
+                  name={name}
+                  taskState={benchmarkState}
+                  onToggle={() => toggleTask(benchmark)}
+                />
               )
             })}
           </div>

@@ -39,6 +39,22 @@ function getSystemTheme(): ResolvedTheme {
   return "light"
 }
 
+function getNextTheme(currentTheme: Theme): Theme {
+  if (currentTheme === "dark") {
+    return "light"
+  }
+
+  if (currentTheme === "light") {
+    return "dark"
+  }
+
+  if (getSystemTheme() === "dark") {
+    return "light"
+  }
+
+  return "dark"
+}
+
 function disableTransitionsTemporarily() {
   const style = document.createElement("style")
   style.appendChild(
@@ -101,11 +117,9 @@ export function ThemeProvider({
     [storageKey]
   )
 
-  const applyTheme = React.useCallback(
-    (nextTheme: Theme) => {
+  React.useEffect(() => {
+    const applyResolvedTheme = (resolvedTheme: ResolvedTheme) => {
       const root = document.documentElement
-      const resolvedTheme =
-        nextTheme === "system" ? getSystemTheme() : nextTheme
       const restoreTransitions = disableTransitionOnChange
         ? disableTransitionsTemporarily()
         : null
@@ -116,12 +130,9 @@ export function ThemeProvider({
       if (restoreTransitions) {
         restoreTransitions()
       }
-    },
-    [disableTransitionOnChange]
-  )
+    }
 
-  React.useEffect(() => {
-    applyTheme(theme)
+    applyResolvedTheme(theme === "system" ? getSystemTheme() : theme)
 
     if (theme !== "system") {
       return undefined
@@ -129,7 +140,7 @@ export function ThemeProvider({
 
     const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
     const handleChange = () => {
-      applyTheme("system")
+      applyResolvedTheme(getSystemTheme())
     }
 
     mediaQuery.addEventListener("change", handleChange)
@@ -137,7 +148,7 @@ export function ThemeProvider({
     return () => {
       mediaQuery.removeEventListener("change", handleChange)
     }
-  }, [theme, applyTheme])
+  }, [theme, disableTransitionOnChange])
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -157,19 +168,9 @@ export function ThemeProvider({
         return
       }
 
-      setThemeState((currentTheme) => {
-        const nextTheme =
-          currentTheme === "dark"
-            ? "light"
-            : currentTheme === "light"
-              ? "dark"
-              : getSystemTheme() === "dark"
-                ? "light"
-                : "dark"
-
-        localStorage.setItem(storageKey, nextTheme)
-        return nextTheme
-      })
+      const nextTheme = getNextTheme(theme)
+      localStorage.setItem(storageKey, nextTheme)
+      setThemeState(nextTheme)
     }
 
     window.addEventListener("keydown", handleKeyDown)
@@ -177,7 +178,7 @@ export function ThemeProvider({
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [storageKey])
+  }, [storageKey, theme])
 
   React.useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -219,7 +220,7 @@ export function ThemeProvider({
   )
 }
 
-export const useTheme = () => {
+const useTheme = () => {
   const context = React.useContext(ThemeProviderContext)
 
   if (context === undefined) {

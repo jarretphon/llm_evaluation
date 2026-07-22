@@ -331,7 +331,7 @@ export function MultiSelectGroup(
   return <CommandGroup {...props} />
 }
 
-export function MultiSelectSeparator(
+function MultiSelectSeparator(
   props: ComponentPropsWithoutRef<typeof CommandSeparator>,
 ) {
   return <CommandSeparator {...props} />

@@ -37,7 +37,7 @@ type ItemDropdownProps = {
   onSelect: (value: string) => void
 }
 
-export function ItemDropdown({
+function ItemDropdown({
   data,
   selectedValue,
   onSelect,
