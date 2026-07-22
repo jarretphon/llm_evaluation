@@ -1,6 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
+from app.domains.evaluations.models import EvaluationModel
 from app.domains.llms.models import LLMModel
 from sqlmodel import Session
 
@@ -14,6 +15,7 @@ def seed_llm(
     provider: str = "OpenAI",
     api_key: str = "seed-api-key",
     added_at: datetime | None = None,
+    evaluations: list[EvaluationModel] | None = None,
 ) -> LLMModel:
     llm = LLMModel(
         id=uuid.uuid4(),
@@ -24,6 +26,9 @@ def seed_llm(
         api_key=api_key,
         added_at=added_at or datetime.now(UTC),
     )
+    for evaluation in evaluations or []:
+        evaluation.llm_id = llm.id
+    llm.evaluations = evaluations or []
     session.add(llm)
     session.commit()
     session.refresh(llm)

@@ -1,6 +1,6 @@
 import os
 from collections.abc import Callable, Iterator
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import app.db.base  # noqa: F401
 import pytest
@@ -9,9 +9,9 @@ from app.domains.evaluations.models import EvaluationModel, EvaluationStatus
 from app.domains.llms.models import LLMModel
 from sqlmodel import Session, SQLModel, create_engine
 from tests.seeds.evaluations import (
+    build_benchmark,
     make_lm_eval_result as build_lm_eval_result,
     seed_evaluation as create_seed_evaluation,
-    seed_evaluation_with_metrics as create_seed_evaluation_with_metrics,
 )
 from tests.seeds.llms import seed_llm as create_seed_llm
 
@@ -102,20 +102,36 @@ def seed_evaluation(
 
 
 @pytest.fixture
-def seed_evaluation_with_metrics(
-    db_session: Session,
-) -> Callable[..., EvaluationModel]:
-    def _seed_evaluation_with_metrics(**kwargs) -> EvaluationModel:
-        return create_seed_evaluation_with_metrics(db_session, **kwargs)
-
-    return _seed_evaluation_with_metrics
-
-
-@pytest.fixture
 def seed_completed_evaluation(
-    seed_evaluation_with_metrics: Callable[..., EvaluationModel],
+    seed_evaluation: Callable[..., EvaluationModel],
 ) -> Callable[..., EvaluationModel]:
-    return seed_evaluation_with_metrics
+    def _seed_completed_evaluation(
+        *,
+        llm: LLMModel,
+        completed_at: datetime,
+        status: EvaluationStatus = EvaluationStatus.COMPLETED,
+        benchmark_metrics: dict[str, dict[str, float | None]] | None = None,
+    ) -> EvaluationModel:
+        benchmark_metrics = benchmark_metrics or {"mmlu": {"acc": 0.8}}
+        return seed_evaluation(
+            llm=llm,
+            status=status,
+            progress=100.0 if status == EvaluationStatus.COMPLETED else 50.0,
+            started_at=completed_at - timedelta(minutes=10),
+            completed_at=completed_at if status == EvaluationStatus.COMPLETED else None,
+            duration=600.0 if status == EvaluationStatus.COMPLETED else 0.0,
+            benchmarks=[
+                build_benchmark(
+                    benchmark_name,
+                    status=status,
+                    n_samples=100,
+                    metrics=metrics,
+                )
+                for benchmark_name, metrics in benchmark_metrics.items()
+            ],
+        )
+
+    return _seed_completed_evaluation
 
 
 @pytest.fixture

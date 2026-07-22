@@ -9,9 +9,11 @@ from app.domains.leaderboard.service import LeaderboardService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session
+
 from tests.seeds.leaderboard import (
     LEADERBOARD_BENCHMARK_OPTIONS,
-    LeaderboardSeedData,
+)
+from tests.seeds.leaderboard import (
     seed_leaderboard_data as create_leaderboard_seed_data,
 )
 
@@ -33,7 +35,7 @@ def leaderboard_benchmark_options(mocker) -> dict[str, list[str]]:
 
 
 @pytest.fixture
-def leaderboard_seed_data(db_session: Session) -> LeaderboardSeedData:
+def leaderboard_seed_data(db_session: Session):
     return create_leaderboard_seed_data(db_session)
 
 

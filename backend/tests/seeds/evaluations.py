@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from app.domains.evaluations.models import (
     BenchmarkModel,
@@ -22,27 +22,17 @@ def seed_evaluation(
     started_at: datetime | None = None,
     completed_at: datetime | None = None,
     duration: float = 0.0,
+    estimated_end_time: datetime | None = None,
 ) -> EvaluationModel:
-    evaluation = EvaluationModel(
-        id=uuid.uuid4(),
-        llm_id=llm.id,
+    evaluation = build_evaluation(
+        llm=llm,
         status=status,
         progress=progress,
-        metadata_entry=EvaluationMetadata(
-            started_at=started_at or datetime.now(UTC),
-            completed_at=completed_at,
-            duration=duration,
-        ),
-        benchmarks=benchmarks
-        if benchmarks is not None
-        else [
-            BenchmarkModel(
-                name="mmlu",
-                status=EvaluationStatus.COMPLETED,
-                n_samples=20,
-                metrics=[MetricModel(name="acc", value=0.8)],
-            )
-        ],
+        benchmarks=benchmarks,
+        started_at=started_at,
+        completed_at=completed_at,
+        duration=duration,
+        estimated_end_time=estimated_end_time,
     )
     session.add(evaluation)
     session.commit()
@@ -50,34 +40,63 @@ def seed_evaluation(
     return evaluation
 
 
-def seed_evaluation_with_metrics(
-    session: Session,
+def build_evaluation(
     *,
-    llm: LLMModel,
-    completed_at: datetime,
-    status: EvaluationStatus = EvaluationStatus.COMPLETED,
-    benchmark_metrics: dict[str, dict[str, float | None]] | None = None,
+    llm: LLMModel | None = None,
+    llm_id: uuid.UUID | None = None,
+    status: EvaluationStatus = EvaluationStatus.QUEUED,
+    progress: float = 0.0,
+    benchmarks: list[BenchmarkModel] | None = None,
+    started_at: datetime | None = None,
+    completed_at: datetime | None = None,
+    duration: float = 0.0,
+    estimated_end_time: datetime | None = None,
 ) -> EvaluationModel:
-    benchmark_metrics = benchmark_metrics or {"mmlu": {"acc": 0.8}}
-    return seed_evaluation(
-        session,
-        llm=llm,
-        status=status,
-        progress=100.0 if status == EvaluationStatus.COMPLETED else 50.0,
-        started_at=completed_at - timedelta(minutes=10),
-        completed_at=completed_at if status == EvaluationStatus.COMPLETED else None,
-        duration=600.0 if status == EvaluationStatus.COMPLETED else 0.0,
-        benchmarks=[
-            BenchmarkModel(
-                name=benchmark_name,
-                status=status,
-                n_samples=100,
-                metrics=[
-                    MetricModel(name=metric_name, value=metric_value)
-                    for metric_name, metric_value in metrics.items()
-                ],
+    evaluation_data = {
+        "id": uuid.uuid4(),
+        "status": status,
+        "progress": progress,
+        "metadata_entry": EvaluationMetadata(
+            started_at=started_at or datetime.now(UTC),
+            completed_at=completed_at,
+            duration=duration,
+            estimated_end_time=estimated_end_time,
+        ),
+        "benchmarks": benchmarks
+        if benchmarks is not None
+        else [
+            build_benchmark(
+                "mmlu",
+                status=EvaluationStatus.COMPLETED,
+                n_samples=20,
+                metrics={"acc": 0.8},
             )
-            for benchmark_name, metrics in benchmark_metrics.items()
+        ],
+    }
+    if llm is not None:
+        evaluation_data["llm_id"] = llm.id
+    elif llm_id is not None:
+        evaluation_data["llm_id"] = llm_id
+
+    return EvaluationModel(**evaluation_data)
+
+
+def build_benchmark(
+    name: str,
+    *,
+    status: EvaluationStatus = EvaluationStatus.COMPLETED,
+    description: str = "",
+    n_samples: int = 100,
+    metrics: dict[str, float | None] | None = None,
+) -> BenchmarkModel:
+    return BenchmarkModel(
+        name=name,
+        description=description,
+        status=status,
+        n_samples=n_samples,
+        metrics=[
+            MetricModel(name=metric_name, value=metric_value)
+            for metric_name, metric_value in (metrics or {}).items()
         ],
     )
 
@@ -89,7 +108,9 @@ def make_lm_eval_result(
     effective_samples: int,
     original_samples: int | None = None,
 ) -> dict:
-    sample_count = original_samples if original_samples is not None else effective_samples
+    sample_count = (
+        original_samples if original_samples is not None else effective_samples
+    )
 
     return {
         "results": {
