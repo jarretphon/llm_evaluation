@@ -68,7 +68,7 @@ export function ModelDetails() {
         <Button
           variant="outline"
           className="w-fit cursor-pointer rounded-lg"
-          onClick={() => navigate("/models")}
+          onClick={() => navigate("/")}
         >
           <ArrowLeft className="size-4" />
         </Button>

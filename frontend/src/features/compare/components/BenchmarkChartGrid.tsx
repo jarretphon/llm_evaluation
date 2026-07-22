@@ -9,6 +9,10 @@ export function BenchmarkChartGrid({
 }) {
   const { data, isPending, error } = useCompareModels(selectedModelIds)
 
+  if (selectedModelIds.length === 0) {
+    return <ChartGridEmpty />
+  }
+
   if (isPending) {
     return <div>Loading comparison...</div>
   }
