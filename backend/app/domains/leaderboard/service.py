@@ -1,8 +1,7 @@
 import json
-from functools import lru_cache
 from typing import Any
 
-from app.domains.evaluations.traversal import get_root_groups
+from app.domains.evaluations.benchmark_options import get_cached_benchmark_options
 from app.domains.leaderboard.errors import (
     InvalidLeaderboardBenchmarkError,
     NoLeaderboardBenchmarksSelectedError,
@@ -16,19 +15,14 @@ from app.domains.leaderboard.schemas import (
     LeaderboardRowRead,
     LeaderboardScoreRead,
 )
-from lm_eval.tasks import TaskManager
 
 
 class LeaderboardService:
     def __init__(self, repository: LeaderboardRepository) -> None:
         self.repository = repository
 
-    @lru_cache(maxsize=1)
-    def get_task_manager(self) -> TaskManager:
-        return TaskManager()
-
     def list_benchmark_options(self) -> dict[str, list[str]]:
-        return get_root_groups(self.get_task_manager())
+        return get_cached_benchmark_options()
 
     def get_leaderboard(
         self, leaderboard_request: LeaderboardRequest

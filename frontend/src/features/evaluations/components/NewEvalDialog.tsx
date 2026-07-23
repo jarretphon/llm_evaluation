@@ -15,7 +15,7 @@ import { ButtonGroup } from "@/components/ui/button-group"
 import { SearchBar } from "@/features/evaluations/components/SearchBar"
 import { Separator } from "@/components/ui/separator"
 
-import { useGetBenchmarkOptions } from "@/features/evaluations/hooks/queries/useEvaluations"
+import { useBenchmarkOptions } from "@/hooks/queries/useBenchmarkOptions"
 import type { components } from "@/types/schema"
 
 type Model = components["schemas"]["LLMRead"]
@@ -34,7 +34,7 @@ export function NewEvalDialog({
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
-  const { data, isPending, error } = useGetBenchmarkOptions()
+  const { data, isPending, error } = useBenchmarkOptions()
 
   const benchmarks = useMemo(() => Object.entries(data || {}), [data])
 

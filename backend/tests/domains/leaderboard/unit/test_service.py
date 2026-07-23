@@ -22,17 +22,15 @@ class FakeLeaderboardRepository:
 def test_list_benchmark_options_returns_root_groups(mocker) -> None:
     repository = FakeLeaderboardRepository()
     service = LeaderboardService(repository)
-    task_manager = object()
-    mocker.patch.object(service, "get_task_manager", return_value=task_manager)
-    get_root_groups = mocker.patch(
-        "app.domains.leaderboard.service.get_root_groups",
+    get_cached_benchmark_options = mocker.patch(
+        "app.domains.leaderboard.service.get_cached_benchmark_options",
         return_value=BENCHMARK_OPTIONS,
     )
 
     options = service.list_benchmark_options()
 
     assert options == BENCHMARK_OPTIONS
-    get_root_groups.assert_called_once_with(task_manager)
+    get_cached_benchmark_options.assert_called_once_with()
 
 
 def test_get_leaderboard_raises_when_no_benchmarks_are_selected(mocker) -> None:

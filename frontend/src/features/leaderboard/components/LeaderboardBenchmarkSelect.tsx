@@ -8,7 +8,7 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
-import { useGetLeaderboardBenchmarkOptions } from "../hooks/queries/useLeaderboard"
+import { useBenchmarkOptions } from "@/hooks/queries/useBenchmarkOptions"
 
 type LeaderboardBenchmarkSelectProps = {
   selectedBenchmarks: string[]
@@ -19,7 +19,7 @@ export function LeaderboardBenchmarkSelect({
   selectedBenchmarks,
   onChange,
 }: LeaderboardBenchmarkSelectProps) {
-  const { data, isPending, error } = useGetLeaderboardBenchmarkOptions()
+  const { data, isPending, error } = useBenchmarkOptions()
 
   if (isPending) {
     return (
@@ -43,9 +43,9 @@ export function LeaderboardBenchmarkSelect({
   )
 
   return (
-    <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
-      <CardHeader className="gap-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className="gap-4 rounded-lg border border-border/60 bg-card text-card-foreground">
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between">
           <CardTitle className="text-lg text-foreground">
             Select leaderboard benchmarks
           </CardTitle>
@@ -54,7 +54,7 @@ export function LeaderboardBenchmarkSelect({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         <MultiSelect values={selectedBenchmarks} onValuesChange={onChange}>
           <MultiSelectTrigger className="w-full max-w-160">
             <MultiSelectValue placeholder="Select benchmarks" />

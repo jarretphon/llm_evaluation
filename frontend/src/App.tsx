@@ -9,8 +9,11 @@ import { Evaluations } from "@/pages/evaluations/evaluations"
 import { Compare } from "@/pages/compare/compare"
 import { Leaderboard } from "@/pages/leaderboard/leaderboard"
 import { Toaster } from "@/components/ui/sonner"
+import { usePrefetchBenchmarkOptions } from "@/hooks/queries/useBenchmarkOptions"
 
 export function App() {
+  usePrefetchBenchmarkOptions()
+
   return (
     <SidebarProvider
       style={

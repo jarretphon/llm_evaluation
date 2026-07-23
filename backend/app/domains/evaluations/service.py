@@ -6,6 +6,7 @@ from app.domains.evaluations.aggregator import (
     aggregate_results,
     build_benchmark_metrics,
 )
+from app.domains.evaluations.benchmark_options import get_cached_benchmark_options
 from app.domains.evaluations.errors import (
     EvaluationNotFoundError,
     NoBenchmarksSelectedError,
@@ -25,7 +26,6 @@ from app.domains.evaluations.parser import (
 from app.domains.evaluations.repository import EvaluationRepository
 from app.domains.evaluations.runner import run_lm_eval
 from app.domains.evaluations.schemas import EvaluationCreate
-from app.domains.evaluations.traversal import get_root_groups
 from app.domains.evaluations.utils import get_group_tasks
 from lm_eval.tasks import TaskManager
 
@@ -39,7 +39,7 @@ class EvaluationService:
         return TaskManager()
 
     def list_benchmark_options(self) -> dict[str, list[str]]:
-        return get_root_groups(self.get_task_manager())
+        return get_cached_benchmark_options()
 
     def list_evaluations(
         self, offset: int = 0, limit: int = 10

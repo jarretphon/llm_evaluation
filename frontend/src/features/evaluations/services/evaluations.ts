@@ -15,16 +15,6 @@ export const evaluationService = {
     return data
   },
 
-  getBenchmarkOptions: async () => {
-    const { data, error } = await apiClient.GET("/evaluations/benchmarks")
-
-    if (error) {
-      throw new Error("Failed to fetch benchmark options")
-    }
-
-    return data
-  },
-
   getEvaluationById: async (evaluationId: string): Promise<EvaluationRead> => {
     const { data, error } = await apiClient.GET(
       "/evaluations/{evaluation_id}",
