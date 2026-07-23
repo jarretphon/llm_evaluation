@@ -1,6 +1,7 @@
 import { useCompareModels } from "@/features/compare/hooks/queries/useComparisons"
 import { BenchmarkChart } from "@/features/compare/components/BenchmarkChart"
 import { ChartGridEmpty } from "./ChartGridEmpty"
+import { NoCompletedEvaluationsEmpty } from "./NoCompletedEvaluationsEmpty"
 
 export function BenchmarkChartGrid({
   selectedModelIds,
@@ -22,7 +23,7 @@ export function BenchmarkChartGrid({
   }
 
   if (!data || Object.keys(data).length === 0) {
-    return <ChartGridEmpty />
+    return <NoCompletedEvaluationsEmpty />
   }
 
   const comparisonBenchmarks = Object.entries(data)

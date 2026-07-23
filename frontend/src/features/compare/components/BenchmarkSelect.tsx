@@ -36,9 +36,9 @@ export function BenchmarkSelect({
   }
 
   return (
-    <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
-      <CardHeader className="gap-2">
-        <div className="flex items-center justify-between gap-3">
+    <Card className="gap-4 rounded-lg border border-border/60 bg-card text-card-foreground">
+      <CardHeader>
+        <div className="flex items-center justify-between">
           <CardTitle className="text-lg text-foreground">
             Select models to compare
           </CardTitle>
@@ -47,7 +47,7 @@ export function BenchmarkSelect({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         <MultiSelect
           values={selectedModelIds}
           onValuesChange={handleValueChange}
