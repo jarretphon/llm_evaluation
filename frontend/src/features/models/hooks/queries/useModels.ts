@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { modelService } from "@/features/models/services/models"
-import type { LLMCreate } from "@/features/models/schemas/models"
+import type { LLMCreate, LLMUpdate } from "@/features/models/schemas/models"
 
 export function useGetModels() {
   return useQuery({
@@ -30,7 +30,7 @@ export function useCreateModel() {
 export function useEditModel({ modelId }: { modelId: string }) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: LLMCreate) => modelService.editModel(modelId, data),
+    mutationFn: (data: LLMUpdate) => modelService.editModel(modelId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["models"] })
     },

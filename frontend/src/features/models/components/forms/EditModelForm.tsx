@@ -3,8 +3,9 @@ import { toast } from "sonner"
 import { useEditModel } from "@/features/models/hooks/queries/useModels"
 
 import { ModelForm } from "@/features/models/components/forms/ModelActionFormContent"
+import type { ModelFormValues } from "@/features/models/components/forms/ModelActionFormContent"
 
-import type { LLMCreate, LLMRead } from "@/features/models/schemas/models"
+import type { LLMRead, LLMUpdate } from "@/features/models/schemas/models"
 
 export function EditModelForm({
   formId,
@@ -15,7 +16,7 @@ export function EditModelForm({
   model: LLMRead
   onSubmitSuccess: () => void
 }) {
-  const defaultValues = useMemo<LLMCreate>(
+  const defaultValues = useMemo<ModelFormValues>(
     () => ({
       name: model.name,
       endpoint: model.endpoint,
@@ -30,10 +31,12 @@ export function EditModelForm({
     modelId: model.id,
   })
 
-  function onSubmit(data: LLMCreate) {
+  function onSubmit(data: ModelFormValues) {
     if (isPending) return
 
-    mutate(data, {
+    const updateData: LLMUpdate = data
+
+    mutate(updateData, {
       onSuccess: () => {
         toast.success("Model updated successfully!")
         onSubmitSuccess()

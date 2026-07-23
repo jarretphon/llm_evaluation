@@ -29,7 +29,7 @@ const formSchema = z.object({
   provider: z.string().min(1, "Please enter a provider."),
 }) satisfies z.ZodType<LLMCreate>
 
-type ModelFormValues = z.infer<typeof formSchema>
+export type ModelFormValues = z.infer<typeof formSchema>
 
 export function ModelForm({
   formId,
