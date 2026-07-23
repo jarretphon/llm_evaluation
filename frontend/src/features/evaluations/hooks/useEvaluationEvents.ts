@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
+import { evaluationQueryKeys, modelQueryKeys } from "@/hooks/queries/queryKeys"
 import { BASE_URL } from "@/services/api/client"
 import type { components } from "@/types/schema"
 
@@ -67,17 +68,20 @@ export function useEvaluationEvents() {
         ) as EvaluationRead
 
         queryClient.setQueryData<EvaluationRead[]>(
-          ["evaluations"],
+          evaluationQueryKeys.all,
           (evaluations) => upsertEvaluation(evaluations, updatedEvaluation)
         )
         queryClient.setQueryData<EvaluationRead>(
-          ["evaluation", updatedEvaluation.id],
+          evaluationQueryKeys.detail(updatedEvaluation.id),
           updatedEvaluation
         )
-        queryClient.setQueriesData<LLMRead>({ queryKey: ["model"] }, (model) =>
-          replaceModelEvaluation(model, updatedEvaluation)
+        queryClient.setQueriesData<LLMRead>(
+          { queryKey: modelQueryKeys.details() },
+          (model) => replaceModelEvaluation(model, updatedEvaluation)
         )
-        queryClient.invalidateQueries({ queryKey: ["model-summary-cards"] })
+        queryClient.invalidateQueries({
+          queryKey: modelQueryKeys.summaryCards(),
+        })
       } catch (error) {
         console.error("Failed to parse evaluation update event", error)
       }

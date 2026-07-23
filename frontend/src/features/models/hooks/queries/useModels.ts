@@ -1,24 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { modelService } from "@/features/models/services/models"
 import type { LLMCreate, LLMUpdate } from "@/features/models/schemas/models"
+import { modelQueryKeys } from "@/features/models/hooks/queries/queryKeys"
 
 export function useGetModelSummaryCards() {
   return useQuery({
-    queryKey: ["model-summary-cards"],
+    queryKey: modelQueryKeys.summaryCards(),
     queryFn: modelService.getModelSummaryCards,
   })
 }
 
 export function useGetModels() {
   return useQuery({
-    queryKey: ["models"],
+    queryKey: modelQueryKeys.all,
     queryFn: modelService.getAllModels,
   })
 }
 
 export function useGetModelById({ modelId }: { modelId: string }) {
   return useQuery({
-    queryKey: ["model", modelId],
+    queryKey: modelQueryKeys.detail(modelId),
     queryFn: () => modelService.getModelById(modelId),
     enabled: !!modelId,
   })
@@ -30,10 +31,10 @@ export function useCreateModel() {
     mutationFn: (data: LLMCreate) => modelService.createModel(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["models"],
+        queryKey: modelQueryKeys.all,
       })
       queryClient.invalidateQueries({
-        queryKey: ["model-summary-cards"],
+        queryKey: modelQueryKeys.summaryCards(),
       })
     },
   })
@@ -44,8 +45,8 @@ export function useEditModel({ modelId }: { modelId: string }) {
   return useMutation({
     mutationFn: (data: LLMUpdate) => modelService.editModel(modelId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["models"] })
-      queryClient.invalidateQueries({ queryKey: ["model-summary-cards"] })
+      queryClient.invalidateQueries({ queryKey: modelQueryKeys.all })
+      queryClient.invalidateQueries({ queryKey: modelQueryKeys.summaryCards() })
     },
   })
 }
@@ -56,10 +57,10 @@ export function useDeleteModel() {
     mutationFn: (modelId: string) => modelService.deleteModel(modelId),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["models"],
+        queryKey: modelQueryKeys.all,
       })
       queryClient.invalidateQueries({
-        queryKey: ["model-summary-cards"],
+        queryKey: modelQueryKeys.summaryCards(),
       })
     },
   })

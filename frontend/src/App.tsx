@@ -9,9 +9,11 @@ import { Evaluations } from "@/pages/evaluations/evaluations"
 import { Compare } from "@/pages/compare/compare"
 import { Leaderboard } from "@/pages/leaderboard/leaderboard"
 import { Toaster } from "@/components/ui/sonner"
+import { useEvaluationEvents } from "@/features/evaluations/hooks/useEvaluationEvents"
 import { usePrefetchBenchmarkOptions } from "@/hooks/queries/useBenchmarkOptions"
 
 export function App() {
+  useEvaluationEvents()
   usePrefetchBenchmarkOptions()
 
   return (

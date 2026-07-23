@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { evaluationService } from "@/features/evaluations/services/evaluations"
 import type { EvaluationCreate } from "@/features/evaluations/schemas/evaluations"
+import { evaluationQueryKeys } from "@/features/evaluations/hooks/queries/queryKeys"
+import { modelQueryKeys } from "@/hooks/queries/queryKeys"
 
 export function useGetEvaluations() {
   return useQuery({
-    queryKey: ["evaluations"],
+    queryKey: evaluationQueryKeys.all,
     queryFn: evaluationService.getEvaluations,
   })
 }
@@ -17,7 +19,7 @@ export function useGetEvaluationById({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ["evaluation", evaluationId],
+    queryKey: evaluationQueryKeys.detail(evaluationId),
     queryFn: () => evaluationService.getEvaluationById(evaluationId),
     enabled: enabled && !!evaluationId,
   })
@@ -29,15 +31,15 @@ export function useCreateEvaluation() {
     mutationFn: (data: EvaluationCreate) =>
       evaluationService.createEvaluation(data),
     onSuccess: (createdEvaluation, evaluationCreate) => {
-      queryClient.invalidateQueries({ queryKey: ["evaluations"] })
+      queryClient.invalidateQueries({ queryKey: evaluationQueryKeys.all })
       queryClient.invalidateQueries({
-        queryKey: ["model", evaluationCreate.model_id],
+        queryKey: evaluationQueryKeys.detail(createdEvaluation.id),
       })
       queryClient.invalidateQueries({
-        queryKey: ["evaluation", createdEvaluation.id],
+        queryKey: modelQueryKeys.detail(evaluationCreate.model_id),
       })
       queryClient.invalidateQueries({
-        queryKey: ["model-summary-cards"],
+        queryKey: modelQueryKeys.summaryCards(),
       })
     },
   })
