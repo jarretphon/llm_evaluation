@@ -8,7 +8,7 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
-import { useGetModels } from "@/features/models/hooks/queries/useModels"
+import { useAvailableComparisonModels } from "@/features/compare/hooks/queries/useComparisons"
 
 type BenchmarkSelectProps = {
   selectedModelIds: string[]
@@ -25,7 +25,7 @@ export function BenchmarkSelect({
     onChange(nextModelIds.slice(0, maxSelected))
   }
 
-  const { data, isPending, error } = useGetModels()
+  const { data, isPending, error } = useAvailableComparisonModels()
 
   if (isPending) {
     return <div>Loading models...</div>
