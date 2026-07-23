@@ -1,9 +1,12 @@
 import uuid
 from collections.abc import Callable
+from datetime import UTC, datetime
 
+from app.domains.evaluations.models import EvaluationModel, EvaluationStatus
 from app.domains.llms.models import LLMModel
 from fastapi.testclient import TestClient
 import pytest
+from tests.seeds.evaluations import build_benchmark
 
 
 def test_create_llm_returns_created(
@@ -89,6 +92,58 @@ def test_list_llms_returns_models_with_pagination(
     data = response.json()
     assert len(data) == 1
     assert data[0]["id"] == str(seed_ordered_llms[1].id)
+
+
+def test_get_model_summary_cards_returns_current_model_page_stats(
+    api_client: TestClient,
+    seed_llm: Callable[..., LLMModel],
+    seed_evaluation: Callable[..., EvaluationModel],
+) -> None:
+    llm = seed_llm(name="Summary API Model", provider="OpenAI")
+    seed_llm(name="Second Summary API Model", provider="Anthropic")
+    seed_evaluation(
+        llm=llm,
+        status=EvaluationStatus.RUNNING,
+        benchmarks=[build_benchmark("mmlu", status=EvaluationStatus.RUNNING)],
+    )
+    seed_evaluation(
+        llm=llm,
+        status=EvaluationStatus.COMPLETED,
+        completed_at=datetime.now(UTC),
+    )
+    seed_evaluation(llm=llm, status=EvaluationStatus.QUEUED)
+    seed_evaluation(llm=llm, status=EvaluationStatus.PARTIAL_FAILED)
+
+    response = api_client.get("/llms/summary")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data == [
+        {
+            "key": "total_models",
+            "header": "Total Models",
+            "data": "2",
+            "badge_data": "2 providers",
+        },
+        {
+            "key": "active_evaluations",
+            "header": "Active Evaluations",
+            "data": "1",
+            "badge_data": "1 task running",
+        },
+        {
+            "key": "completed_today",
+            "header": "Completed Today",
+            "data": "1",
+            "badge_data": "1 job remaining",
+        },
+        {
+            "key": "needs_attention",
+            "header": "Needs Attention",
+            "data": "1",
+            "badge_data": "",
+        },
+    ]
 
 
 @pytest.mark.parametrize("limit", [0, 101])

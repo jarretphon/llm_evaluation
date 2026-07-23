@@ -57,6 +57,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/llms/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Model Summary Cards */
+        get: operations["get_model_summary_cards_llms_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/llms/{llm_id}": {
         parameters: {
             query?: never;
@@ -423,6 +440,17 @@ export interface components {
             /** Value */
             value: number | null;
         };
+        /** ModelSummaryCardRead */
+        ModelSummaryCardRead: {
+            /** Key */
+            key: string;
+            /** Header */
+            header: string;
+            /** Data */
+            data: string;
+            /** Badge Data */
+            badge_data: string;
+        };
         /** UserCreate */
         UserCreate: {
             /** Name */
@@ -618,6 +646,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_model_summary_cards_llms_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelSummaryCardRead"][];
                 };
             };
         };
@@ -819,7 +867,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "text/event-stream": unknown;
                 };
             };
         };

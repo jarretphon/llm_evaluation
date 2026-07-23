@@ -77,6 +77,7 @@ export function useEvaluationEvents() {
         queryClient.setQueriesData<LLMRead>({ queryKey: ["model"] }, (model) =>
           replaceModelEvaluation(model, updatedEvaluation)
         )
+        queryClient.invalidateQueries({ queryKey: ["model-summary-cards"] })
       } catch (error) {
         console.error("Failed to parse evaluation update event", error)
       }

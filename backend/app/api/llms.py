@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.domains.llms.dependencies import LLMServiceDep
 from app.domains.llms.errors import LLMNameAlreadyExistsError, LLMNotFoundError
-from app.domains.llms.schemas import LLMCreate, LLMRead, LLMUpdate
+from app.domains.llms.schemas import (
+    LLMCreate,
+    LLMRead,
+    LLMUpdate,
+    ModelSummaryCardRead,
+)
 
 router = APIRouter()
 
@@ -16,6 +21,11 @@ def get_all_llms(
     limit: int = Query(default=10, ge=1, le=100),
 ) -> list[LLMRead]:
     return service.list_llms(offset=offset, limit=limit)
+
+
+@router.get("/summary")
+def get_model_summary_cards(service: LLMServiceDep) -> list[ModelSummaryCardRead]:
+    return service.list_model_summary_cards()
 
 
 @router.get("/{llm_id}")

@@ -1,7 +1,21 @@
 import { apiClient } from "@/services/api/client"
-import type { LLMCreate, LLMUpdate } from "@/features/models/schemas/models"
+import type {
+  LLMCreate,
+  LLMUpdate,
+  ModelSummaryCard,
+} from "@/features/models/schemas/models"
 
 export const modelService = {
+  getModelSummaryCards: async (): Promise<ModelSummaryCard[]> => {
+    const { data, error } = await apiClient.GET("/llms/summary")
+
+    if (error) {
+      throw new Error("Failed to fetch model summary")
+    }
+
+    return data
+  },
+
   getAllModels: async () => {
     const { data, error } = await apiClient.GET("/llms")
 

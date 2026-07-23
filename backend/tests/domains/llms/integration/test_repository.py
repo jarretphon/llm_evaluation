@@ -1,11 +1,14 @@
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 
 import pytest
+from app.domains.evaluations.models import EvaluationModel, EvaluationStatus
 from app.domains.llms.models import LLMModel
 from app.domains.llms.repository import LLMRepository
 from app.domains.llms.schemas import LLMCreate, LLMUpdate
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
+from tests.seeds.evaluations import build_benchmark
 
 
 def test_create_persists_llm_and_can_fetch_by_id_and_name(
@@ -30,6 +33,51 @@ def test_list_llms_returns_rows_with_pagination(
     result = llm_repository.list_llms(offset=1, limit=1)
 
     assert result == [seed_ordered_llms[1]]
+
+
+def test_get_model_summary_counts_reflects_current_database_state(
+    llm_repository: LLMRepository,
+    seed_llm: Callable[..., LLMModel],
+    seed_evaluation: Callable[..., EvaluationModel],
+) -> None:
+    today = datetime.now(UTC)
+    yesterday = today - timedelta(days=1)
+    first_llm = seed_llm(name="First Summary Model", provider="OpenAI")
+    second_llm = seed_llm(name="Second Summary Model", provider="Anthropic")
+    seed_llm(name="Third Summary Model", provider="OpenAI")
+
+    seed_evaluation(
+        llm=first_llm,
+        status=EvaluationStatus.RUNNING,
+        benchmarks=[
+            build_benchmark("running-one", status=EvaluationStatus.RUNNING),
+            build_benchmark("running-two", status=EvaluationStatus.RUNNING),
+            build_benchmark("queued-task", status=EvaluationStatus.QUEUED),
+        ],
+    )
+    seed_evaluation(
+        llm=first_llm,
+        status=EvaluationStatus.COMPLETED,
+        completed_at=today,
+    )
+    seed_evaluation(
+        llm=first_llm,
+        status=EvaluationStatus.COMPLETED,
+        completed_at=yesterday,
+    )
+    seed_evaluation(llm=second_llm, status=EvaluationStatus.QUEUED)
+    seed_evaluation(llm=second_llm, status=EvaluationStatus.FAILED)
+    seed_evaluation(llm=second_llm, status=EvaluationStatus.PARTIAL_FAILED)
+
+    result = llm_repository.get_model_summary_counts()
+
+    assert result.total_models == 3
+    assert result.provider_count == 2
+    assert result.active_evaluations == 1
+    assert result.running_benchmarks == 2
+    assert result.completed_today == 1
+    assert result.queued_evaluations == 1
+    assert result.needs_attention == 2
 
 
 def test_edit_llm_updates_only_provided_fields(

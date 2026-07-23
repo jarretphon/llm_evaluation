@@ -43,6 +43,9 @@ export function useCreateEvaluation() {
       queryClient.invalidateQueries({
         queryKey: ["evaluation", createdEvaluation.id],
       })
+      queryClient.invalidateQueries({
+        queryKey: ["model-summary-cards"],
+      })
     },
   })
 }

@@ -3,7 +3,8 @@ import uuid
 from app.domains.llms.errors import LLMNameAlreadyExistsError, LLMNotFoundError
 from app.domains.llms.models import LLMModel
 from app.domains.llms.repository import LLMRepository
-from app.domains.llms.schemas import LLMCreate, LLMUpdate
+from app.domains.llms.schemas import LLMCreate, LLMUpdate, ModelSummaryCardRead
+from app.domains.llms.utils import pluralize
 
 
 class LLMService:
@@ -12,6 +13,36 @@ class LLMService:
 
     def list_llms(self, offset: int = 0, limit: int = 10) -> list[LLMModel]:
         return self.repository.list_llms(offset=offset, limit=limit)
+
+    def list_model_summary_cards(self) -> list[ModelSummaryCardRead]:
+        counts = self.repository.get_model_summary_counts()
+
+        return [
+            ModelSummaryCardRead(
+                key="total_models",
+                header="Total Models",
+                data=str(counts.total_models),
+                badge_data=pluralize(counts.provider_count, "provider"),
+            ),
+            ModelSummaryCardRead(
+                key="active_evaluations",
+                header="Active Evaluations",
+                data=str(counts.active_evaluations),
+                badge_data=pluralize(counts.running_benchmarks, "task") + " running",
+            ),
+            ModelSummaryCardRead(
+                key="completed_today",
+                header="Completed Today",
+                data=str(counts.completed_today),
+                badge_data=pluralize(counts.queued_evaluations, "job") + " remaining",
+            ),
+            ModelSummaryCardRead(
+                key="needs_attention",
+                header="Needs Attention",
+                data=str(counts.needs_attention),
+                badge_data="",
+            ),
+        ]
 
     def get_llm(self, llm_id: uuid.UUID) -> LLMModel:
         llm = self.repository.get_by_id(llm_id)

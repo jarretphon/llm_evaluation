@@ -1,4 +1,8 @@
-import type { LLMCreate, LLMRead } from "@/features/models/schemas/models"
+import type {
+  LLMCreate,
+  LLMRead,
+  ModelSummaryCard,
+} from "@/features/models/schemas/models"
 
 let modelSequence = 0
 
@@ -27,6 +31,18 @@ export function makeModelPayload(
     description: "A newly submitted model",
     provider: "Open AI",
     api_key: "new-test-api-key",
+    ...overrides,
+  }
+}
+
+export function makeModelSummaryCard(
+  overrides: Partial<ModelSummaryCard> = {}
+): ModelSummaryCard {
+  return {
+    key: "total_models",
+    header: "Total Models",
+    data: "3",
+    badge_data: "2 providers",
     ...overrides,
   }
 }

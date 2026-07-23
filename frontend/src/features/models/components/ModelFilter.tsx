@@ -37,11 +37,7 @@ type ItemDropdownProps = {
   onSelect: (value: string) => void
 }
 
-function ItemDropdown({
-  data,
-  selectedValue,
-  onSelect,
-}: ItemDropdownProps) {
+function ItemDropdown({ data, selectedValue, onSelect }: ItemDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

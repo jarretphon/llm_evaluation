@@ -28,3 +28,10 @@ class LLMUpdate(BaseModel):
     description: str | None = None
     provider: str | None = None
     api_key: str | None = None
+
+
+class ModelSummaryCardRead(BaseModel):
+    key: str
+    header: str
+    data: str
+    badge_data: str

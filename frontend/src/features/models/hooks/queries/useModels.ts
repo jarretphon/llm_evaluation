@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { modelService } from "@/features/models/services/models"
 import type { LLMCreate, LLMUpdate } from "@/features/models/schemas/models"
 
+export function useGetModelSummaryCards() {
+  return useQuery({
+    queryKey: ["model-summary-cards"],
+    queryFn: modelService.getModelSummaryCards,
+  })
+}
+
 export function useGetModels() {
   return useQuery({
     queryKey: ["models"],
@@ -22,7 +29,12 @@ export function useCreateModel() {
   return useMutation({
     mutationFn: (data: LLMCreate) => modelService.createModel(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["models"] })
+      queryClient.invalidateQueries({
+        queryKey: ["models"],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["model-summary-cards"],
+      })
     },
   })
 }
@@ -33,6 +45,7 @@ export function useEditModel({ modelId }: { modelId: string }) {
     mutationFn: (data: LLMUpdate) => modelService.editModel(modelId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["models"] })
+      queryClient.invalidateQueries({ queryKey: ["model-summary-cards"] })
     },
   })
 }
@@ -42,7 +55,12 @@ export function useDeleteModel() {
   return useMutation({
     mutationFn: (modelId: string) => modelService.deleteModel(modelId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["models"] })
+      queryClient.invalidateQueries({
+        queryKey: ["models"],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["model-summary-cards"],
+      })
     },
   })
 }

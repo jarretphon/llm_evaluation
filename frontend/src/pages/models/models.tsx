@@ -13,16 +13,14 @@ export function Models() {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="flex flex-1 flex-col gap-2 px-4 pt-4 pb-1 md:gap-4 md:pt-6">
           <SectionCards />
-          <div className="flex h-full w-full flex-col gap-4 px-4 text-white md:px-6">
-            <ModelFilter
-              providers={providerOptions}
-              selectedProvider={selectedProvider}
-              onProviderChange={setSelectedProvider}
-            />
-            <ModelGrid />
-          </div>
+          <ModelFilter
+            providers={providerOptions}
+            selectedProvider={selectedProvider}
+            onProviderChange={setSelectedProvider}
+          />
+          <ModelGrid />
         </div>
       </div>
     </div>
