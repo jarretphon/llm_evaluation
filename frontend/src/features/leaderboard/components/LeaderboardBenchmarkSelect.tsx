@@ -23,7 +23,7 @@ export function LeaderboardBenchmarkSelect({
 
   if (isPending) {
     return (
-      <div className="rounded-lg border border-white/10 bg-[#151515] p-8 text-center text-sm text-white/60">
+      <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
         Loading benchmarks...
       </div>
     )
@@ -31,7 +31,7 @@ export function LeaderboardBenchmarkSelect({
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-500/30 bg-[#151515] p-8 text-center text-sm text-red-300">
+      <div className="rounded-lg border border-destructive/30 bg-card p-8 text-center text-sm text-destructive">
         Failed to load benchmarks: {error.message}
       </div>
     )
@@ -43,10 +43,10 @@ export function LeaderboardBenchmarkSelect({
   )
 
   return (
-    <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
+    <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
       <CardHeader className="gap-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="text-lg text-white">
+          <CardTitle className="text-lg text-foreground">
             Select leaderboard benchmarks
           </CardTitle>
           <Badge variant="outline" className="rounded-full px-2">

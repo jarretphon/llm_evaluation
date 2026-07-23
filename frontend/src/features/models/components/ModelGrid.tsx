@@ -10,14 +10,14 @@ export function ModelGrid() {
   if (isPending) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="rounded-xl border border-white/10 bg-[#181818] px-6 py-10 text-center text-sm text-red-500">
+      <div className="rounded-xl border border-destructive/30 bg-card px-6 py-10 text-center text-sm text-destructive">
         Failed to load models: {error.message}
       </div>
     )

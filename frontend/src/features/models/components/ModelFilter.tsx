@@ -22,10 +22,10 @@ import { useState } from "react"
 const SearchField = ({ placeholder }: { placeholder: string }) => {
   return (
     <div className="relative w-full min-w-0 flex-1 lg:w-full lg:max-w-xs">
-      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         placeholder={placeholder}
-        className="h-10 w-full rounded-xl border-white/15 bg-[#202020] pl-9 text-sm text-white"
+        className="h-10 w-full rounded-xl border-border bg-input/50 pl-9 text-sm text-foreground"
       />
     </div>
   )
@@ -66,7 +66,7 @@ function ItemDropdown({ data, selectedValue, onSelect }: ItemDropdownProps) {
                       {provider === "All" ? "All providers" : provider}
                     </span>
                     {selectedValue === provider && (
-                      <CheckIcon className="size-4 text-zinc-300" />
+                      <CheckIcon className="size-4 text-muted-foreground" />
                     )}
                   </ItemTitle>
                 </ItemContent>
@@ -93,7 +93,7 @@ export function ModelFilter({
   const [isAddModelDialogOpen, setIsAddModelDialogOpen] = useState(false)
 
   return (
-    <Card className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0 rounded-xl border border-white/10 px-6 py-4 lg:grid-cols-[1fr_auto_auto]">
+    <Card className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0 rounded-xl border border-border px-6 py-4 lg:grid-cols-[1fr_auto_auto]">
       <SearchField placeholder="Search models..." />
 
       <div className="col-span-2 mt-3 min-w-0 lg:col-span-1 lg:mt-0">

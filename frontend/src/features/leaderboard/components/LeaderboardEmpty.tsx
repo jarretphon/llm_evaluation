@@ -10,7 +10,7 @@ import {
 
 export function LeaderboardEmpty() {
   return (
-    <Empty className="border border-dashed bg-muted/30 text-white">
+    <Empty className="border border-dashed bg-muted/30 text-foreground">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <Trophy />

@@ -75,11 +75,11 @@ export function ModelEvaluationPanel({
 
   if (!model) {
     return (
-      <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
+      <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
         <CardHeader>
           <CardTitle>Select a model</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-white/60">
+        <CardContent className="text-sm text-muted-foreground">
           Choose a model card to inspect the latest evaluation runs.
         </CardContent>
       </Card>
@@ -134,7 +134,7 @@ export function ModelEvaluationPanel({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-muted-foreground">
             No evaluation instances match this date range.
           </p>
         )}

@@ -8,7 +8,7 @@ export function Leaderboard() {
   const [selectedBenchmarks, setSelectedBenchmarks] = useState<string[]>([])
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-360 flex-col gap-6 p-4 text-white md:p-6">
+    <div className="mx-auto flex h-full w-full max-w-360 flex-col gap-6 p-4 text-foreground md:p-6">
       <LeaderboardBenchmarkSelect
         selectedBenchmarks={selectedBenchmarks}
         onChange={setSelectedBenchmarks}

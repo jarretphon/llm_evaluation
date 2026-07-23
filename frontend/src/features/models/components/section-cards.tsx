@@ -67,7 +67,7 @@ export function SectionCards() {
         <Card>
           <CardHeader>
             <CardDescription>Model Summary</CardDescription>
-            <CardTitle className="text-sm font-medium text-red-300">
+            <CardTitle className="text-sm font-medium text-destructive">
               Failed to load model summary.
             </CardTitle>
           </CardHeader>

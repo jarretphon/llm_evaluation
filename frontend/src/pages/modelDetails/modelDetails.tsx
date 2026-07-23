@@ -18,7 +18,7 @@ const EmptyState = ({ message }: { message?: string }) => {
   const navigate = useNavigate()
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 p-4 text-white md:p-6">
+    <div className="flex h-full w-full flex-col gap-4 p-4 text-foreground md:p-6">
       <Button
         variant="outline"
         className="w-fit rounded-md"
@@ -26,8 +26,8 @@ const EmptyState = ({ message }: { message?: string }) => {
       >
         <ArrowLeft className="size-4" />
       </Button>
-      <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
-        <CardContent className="py-10 text-sm text-white/60">
+      <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
+        <CardContent className="py-10 text-sm text-muted-foreground">
           {message ?? "This model could not be found."}
         </CardContent>
       </Card>
@@ -49,7 +49,7 @@ export function ModelDetails() {
   if (isPending) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white/80" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary" />
       </div>
     )
   }
@@ -63,7 +63,7 @@ export function ModelDetails() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-6 p-4 text-white md:p-6">
+    <div className="flex h-full w-full flex-col gap-6 p-4 text-foreground md:p-6">
       <div className="flex items-start gap-2 md:flex-row">
         <Button
           variant="outline"
@@ -77,7 +77,7 @@ export function ModelDetails() {
             <h1 className="text-2xl font-semibold md:text-3xl">
               {data.name} - {data.endpoint}
             </h1>
-            <p className="mt-1 line-clamp-2 text-sm text-white/60 md:line-clamp-none">
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground md:line-clamp-none">
               {data.description}
             </p>
           </div>

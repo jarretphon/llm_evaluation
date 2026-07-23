@@ -23,12 +23,12 @@ export function BenchmarkChart({
 
   if (!defaultMetric) {
     return (
-      <Card className="border border-border/60 bg-[#151515] text-white">
+      <Card className="border border-border/60 bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-base text-white">
+          <CardTitle className="text-base text-foreground">
             {benchmarkName}
           </CardTitle>
-          <CardDescription className="text-xs text-white/60">
+          <CardDescription className="text-xs text-muted-foreground">
             No numeric metrics were found for this benchmark.
           </CardDescription>
         </CardHeader>
@@ -37,10 +37,12 @@ export function BenchmarkChart({
   }
 
   return (
-    <Card className="border border-border/60 bg-[#151515] text-white">
+    <Card className="border border-border/60 bg-card text-card-foreground">
       <CardHeader>
-        <CardTitle className="text-base text-white">{benchmarkName}</CardTitle>
-        <CardDescription className="text-xs text-white/60">
+        <CardTitle className="text-base text-foreground">
+          {benchmarkName}
+        </CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">
           Latest completed evaluation only
         </CardDescription>
       </CardHeader>

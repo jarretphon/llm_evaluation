@@ -35,12 +35,12 @@ export function MetricChart({
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 11 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
         />
         <ChartTooltip
           content={<ChartTooltipContent indicator="dot" hideLabel />}

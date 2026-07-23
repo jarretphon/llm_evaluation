@@ -50,15 +50,15 @@ export function EvaluationCard({
   return (
     <button
       type="button"
-      className="flex w-full cursor-pointer flex-col gap-4 rounded-xl bg-[#202020] p-4 text-left transition hover:bg-[#252525] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+      className="flex w-full cursor-pointer flex-col gap-4 rounded-xl bg-muted/40 p-4 text-left text-foreground transition hover:bg-muted/70 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
       onClick={() => onSelect(record)}
     >
       <div className="flex min-w-0 items-start gap-3 sm:flex-1 sm:basis-64">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-white">
+          <h3 className="truncate text-sm font-semibold text-foreground">
             {record.id}
           </h3>
-          <p className="mt-1 text-xs font-medium tracking-wide text-zinc-400">
+          <p className="mt-1 text-xs font-medium tracking-wide text-muted-foreground">
             {record.benchmarks.length} benchmarks • Started{" "}
             {record.metadata_entry.started_at}
           </p>

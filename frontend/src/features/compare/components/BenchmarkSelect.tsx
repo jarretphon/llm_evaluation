@@ -36,10 +36,10 @@ export function BenchmarkSelect({
   }
 
   return (
-    <Card className="rounded-lg border border-border/60 bg-[#151515] text-white">
+    <Card className="rounded-lg border border-border/60 bg-card text-card-foreground">
       <CardHeader className="gap-2">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg text-white">
+          <CardTitle className="text-lg text-foreground">
             Select models to compare
           </CardTitle>
           <Badge variant="outline" className="rounded-full px-2">
